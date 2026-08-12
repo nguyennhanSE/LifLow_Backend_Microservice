@@ -4,6 +4,7 @@ import {
   ClientProxyFactory,
   Transport,
 } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom, timeout } from 'rxjs';
 import {
   LoginDto,
@@ -37,16 +38,25 @@ export interface TokenPayload {
 @Injectable()
 export class IdentityClient implements OnModuleDestroy {
   private readonly client: ClientProxy;
-  private readonly timeoutMs = Number(process.env.RMQ_TIMEOUT_MS ?? 5000);
+  private readonly timeoutMs: number;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
+    this.timeoutMs = this.configService.get<number>('rabbitmq.timeoutMs', 5000);
     this.client = ClientProxyFactory.create({
       transport: Transport.RMQ,
       options: {
-        urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
-        queue: process.env.IDENTITY_QUEUE ?? 'identity_queue',
+        urls: this.configService.get<string[]>('rabbitmq.urls', [
+          'amqp://localhost:5672',
+        ]),
+        queue: this.configService.get<string>(
+          'rabbitmq.queues.identity',
+          'identity_queue',
+        ),
         queueOptions: {
-          durable: false,
+          durable: this.configService.get<boolean>(
+            'rabbitmq.queueOptions.durable',
+            false,
+          ),
         },
       },
     });
@@ -76,9 +86,12 @@ export class IdentityClient implements OnModuleDestroy {
   }
 
   validateToken(accessToken: string) {
-    return this.send<{ accessToken: string }>(IDENTITY_AUTH_PATTERNS.validateToken, {
-      data: { accessToken },
-    });
+    return this.send<{ accessToken: string }>(
+      IDENTITY_AUTH_PATTERNS.validateToken,
+      {
+        data: { accessToken },
+      },
+    );
   }
 
   async onModuleDestroy() {

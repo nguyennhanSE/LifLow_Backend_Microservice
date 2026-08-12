@@ -18,8 +18,14 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/liflow-be/test/jest-e2e.json",
-    "prisma:identity:generate": "prisma generate --schema=./libs/prisma/identity-service.prisma/schema.prisma",
-    "prisma:identity:migrate": "prisma migrate dev --schema=./libs/prisma/identity-service.prisma/schema.prisma"
+    "prisma:identity:generate": "PRISMA_SERVICE=identity-service prisma generate",
+    "prisma:identity:migrate": "PRISMA_SERVICE=identity-service prisma migrate dev",
+    "prisma:identity:migrate:deploy": "PRISMA_SERVICE=identity-service prisma migrate deploy",
+    "prisma:identity:studio": "PRISMA_SERVICE=identity-service prisma studio",
+    "migrate:deploy": "npm run prisma:identity:migrate:deploy",
+    "build:identity": "npm run prisma:identity:generate && nest build identity-service",
+    "build:migrate:identity": "npm run prisma:identity:migrate:deploy && npm run build:identity",
+    "build:migrate": "npm run build:migrate:identity"
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.5",
