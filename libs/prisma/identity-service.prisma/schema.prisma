@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @unique // ID is unique and also serves as username
+  password String? @map("password")
+  name String?
+  membershipLevel String? @map("membership_level")
+  age Int? @map("age")
+  email String?
+  phoneNumber String? @map("phone_number")
+  totalUsedPoints Int? @default(0) @map("total_used_points")
+  availablePoints Int? @default(0) @map("available_points")
+  registrationDate String? @map("registration_date") // Join Date
+  dormancyDate String? @map("dormancy_date") // Date account marked inactive
+  withdrawalDate String? @map("withdrawal_date")
+  withdrawalType String? @map("withdrawal_type")
+  reasonForWithdrawal String? @map("reason_for_withdrawal")
+
+  avatarURL String? @map("avatar_url")
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  // Payment Information
+  totalPurchaseAmount Int? @default(0) @map("total_purchase_amount")
+  // Permissions
+  dashboardAccess Boolean? @default(false) @map("dashboard_access")
+  memberAccess Boolean? @default(false) @map("member_access")
+  productAccess Boolean? @default(false) @map("product_access")
+  orderAccess Boolean? @default(false) @map("order_access")
+  recipeAccess Boolean? @default(false) @map("recipe_access")
+  bannerAccess Boolean? @default(false) @map("banner_access")
+  
+  // Extension
+  mobilePhoneNumber String? @map("mobile_phone_number")
+  nickName String? @map("nick_name")
+  statusMessage String? @map("status_message")
+  // Relations
+  userRole UserRole[]
+  // userMembership UserMembership?
+  // point Point[]
+  session Session[]
+  // recipes Recipe[]
+  // couponHistories CouponHistory[]
+  // recipeComments RecipeComments[]
+  // carts Cart[]
+  // payments Payment[]
+  // productReviews ProductReviews[]
+  // productInquiries ProductInquiries[]
+  // userShippingAddress UserShippingAddress[]
+  // announcement Announcement[]
+  // productInquiryAnswers ProductInquiryAnswers[]
+  // orderGroups OrderGroup[]
+  // productReviewLikes ProductReviewLikes[]
+  // recipeLikes RecipeLikes[]
+  // fcmTokens FcmToken[]
+  // notifications Notification[]
+  // chatRoomsAsUser1 Room[] @relation("RoomUser1")
+  // chatRoomsAsUser2 Room[] @relation("RoomUser2")
+  // messages Message[] @relation("MessageSender")
+  // usereventLogs UserEventLog[]
+  @@map("users")
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  userRole UserRole[]
+  // rolePermission RolePermission[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@index([userId])
+  @@map("user_roles")
+}
+
+model Session {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  refreshToken     String             @unique
+  ip               String?
+  expiredAt        DateTime
+
+  refreshTokenUsed RefreshTokenUsed[]
+
+  @@index([userId, expiredAt])
+  @@map("sessions")
+}
+
+model RefreshTokenUsed {
+  id           String  @id @default(uuid())
+  refreshToken String  @unique
+  sessionId    String
+  session      Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("refresh_token_used")
+}

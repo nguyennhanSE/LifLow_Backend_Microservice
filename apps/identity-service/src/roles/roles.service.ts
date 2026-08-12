@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class IdentityServiceService {
-}
+export class RolesService {}
