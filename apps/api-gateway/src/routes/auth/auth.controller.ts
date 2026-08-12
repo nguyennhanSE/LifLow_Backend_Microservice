@@ -1,5 +1,6 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
+import { ResponseModel } from 'libs/common/response';
 import { IdentityClient } from '../../clients/identity.client';
 import { Public } from '../../guards/public.decorator';
 import { LoginDto, LogoutDto, RefreshTokenRequestDto } from './dtos/auth.dto';
@@ -10,8 +11,8 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  login(@Body() loginDto: LoginDto, @Req() request: Request) {
-    return this.identityClient.login(loginDto, {
+  async login(@Body() loginDto: LoginDto, @Req() request: Request) {
+    const result = await this.identityClient.login(loginDto, {
       ip: this.getClientIp(request),
       userAgent: this.getHeader(request.headers['user-agent']) ?? null,
       requestId:
@@ -23,21 +24,25 @@ export class AuthController {
         this.getHeader(request.headers['trace-id']) ??
         null,
     });
+
+    return this.toResponseModel(result);
   }
 
   @Post('logout')
   @Public()
-  logout(@Body() logoutDto: LogoutDto) {
-    return this.identityClient.logout(logoutDto);
+  async logout(@Body() logoutDto: LogoutDto) {
+    const result = await this.identityClient.logout(logoutDto);
+
+    return this.toResponseModel(result);
   }
 
   @Post('refresh-token')
   @Public()
-  refreshToken(
+  async refreshToken(
     @Body() refreshTokenDto: RefreshTokenRequestDto,
     @Req() request: Request,
   ) {
-    return this.identityClient.refreshToken(refreshTokenDto, {
+    const result = await this.identityClient.refreshToken(refreshTokenDto, {
       ip: this.getClientIp(request),
       userAgent: this.getHeader(request.headers['user-agent']) ?? null,
       requestId:
@@ -49,6 +54,15 @@ export class AuthController {
         this.getHeader(request.headers['trace-id']) ??
         null,
     });
+
+    return this.toResponseModel(result);
+  }
+
+  private toResponseModel(data: unknown): ResponseModel {
+    const responseModel = new ResponseModel();
+    responseModel.setData(data);
+
+    return responseModel;
   }
 
   private getHeader(value: string | string[] | undefined): string | undefined {

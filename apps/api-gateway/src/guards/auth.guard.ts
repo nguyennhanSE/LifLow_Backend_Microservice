@@ -12,7 +12,6 @@ import { IS_PUBLIC } from './public.decorator';
 interface AuthenticatedRequest extends Request {
   user?: TokenPayload;
 }
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
