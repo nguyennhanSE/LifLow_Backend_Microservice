@@ -1,0 +1,244 @@
+
+services:
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: liflow-backend-image
+  #   pull_policy: never
+  #   env_file:
+  #     - .env.prod
+  #   environment:
+  #     # Use the postgres service on liflow-network
+  #     - DATABASE_HOST=postgres
+  #     - DATABASE_URL=postgresql://postgres:123456@postgres:5432/postgres?schema=public
+  #     # Override REDIS_HOST to use Docker service name
+  #     - REDIS_HOST=redis
+  #   ports:
+  #     - "3500:3500"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_started
+  #   # healthcheck:
+  #   #   test:
+  #   #     [
+  #   #       'CMD-SHELL',
+  #   #       'node -e "require(''http'').get(''http://localhost:3500/api/v1/health/ready'', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(''error'', () => process.exit(1))"',
+  #   #     ]
+  #   #   interval: 30s
+  #   #   timeout: 10s
+  #   #   retries: 3
+  #   #   start_period: 90s
+  #   restart: unless-stopped
+  #   networks:
+  #     - liflow-network
+  #   # volumes:
+  #   #   - .:/usr/src/app
+  #   #   - /usr/src/app/node_modules
+  #   # command: npm run start:dev
+
+  postgres:
+    image: postgres
+    container_name: postgres-microservice
+    env_file:
+      - .env.prod 
+    environment:
+      # IMPORTANT:
+      # - `${...}` here is resolved by Docker Compose *before* containers start.
+      # - `env_file: .env.dev` does NOT populate those `${...}` values for Compose interpolation.
+      #   (it only injects env into the container once it starts).
+      # So we provide defaults to prevent Postgres from exiting when variables are missing.
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${DATABASE_NAME:-postgres}
+    volumes:
+      - postgres_data_microservice:/var/lib/postgresql
+    ports:
+      - "5434:5432"
+    networks:
+      - liflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis: 
+    image: redis:7-alpine
+    container_name: redis-microservice
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data_microservice:/data
+    networks:
+      - liflow-network
+    # Ubuntu/EC2 optimizations
+    # sysctls:
+    #   - net.core.somaxconn=65535
+    # ulimits:
+    #   memlock: -1
+    # environment:
+    #   - REDIS_REPLICATION_MODE=master
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter-microservice
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks:
+      - liflow-network
+    pid: host                          # Xem processes của host
+    volumes:
+      - /proc:/host/proc:ro            # CPU, RAM, processes
+      - /sys:/host/sys:ro              # Hardware info
+      - /:/rootfs:ro                   # Filesystem
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-microservice
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    volumes:
+      - prometheus_data_microservice:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - liflow-network
+
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: loki-microservice
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yml
+      - loki_data_microservice:/loki
+    command: -config.file=/etc/loki/local-config.yml
+    networks:
+      - liflow-network
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana-microservice
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data_microservice:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    restart: unless-stopped
+    networks:
+      - liflow-network
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: redisinsight-microservice
+    ports:
+      - "5540:5540" 
+    restart: unless-stopped
+    volumes:
+      - redisinsight_data_microservice:/data
+    networks:
+      - liflow-network
+      
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: backup-microservice
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    volumes:
+      - backup_data_microservice:/backups
+    environment:
+      # Use Docker service name for postgres connection
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${DATABASE_NAME:-postgres}
+      - POSTGRES_USER=${POSTGRES_BACKUP_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_BACKUP_USER_PASSWORD:-postgres}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - EXTRA_OPTS=--schema=public
+    networks:
+      - liflow-network
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: elasticsearch-microservice
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data_microservice:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    networks:
+      - liflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: kibana-microservice
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - kibana_data_microservice:/usr/share/kibana/data
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - liflow-network
+    
+  # es-sync:
+  #   build:
+  #     context: .
+  #     dockerfile: es-sync.Dockerfile
+  #   image: es-sync-image
+  #   pull_policy: build
+  #   container_name: es-sync
+  #   volumes:
+  #     - ./scripts:/app/scripts
+  #   entrypoint: ["sh", "/app/scripts/seed-if-empty.sh"]
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:123456@postgres:5432/postgres?schema=public
+
+  #   depends_on:
+  #     postgres:
+  #         condition: service_healthy
+  #     elasticsearch:
+  #         condition: service_healthy
+  #   restart: "no" 
+  #   networks:
+  #     - liflow-network
+
+networks:
+  liflow-network-microservice:
+    driver: bridge
+
+volumes:
+  postgres_data_microservice:
+  redis_data_microservice:
+  prometheus_data_microservice:
+  grafana_data_microservice:
+  redisinsight_data_microservice:
+  backup_data_microservice:
+  elasticsearch_data_microservice:
+  kibana_data_microservice:
+  loki_data_microservice:
