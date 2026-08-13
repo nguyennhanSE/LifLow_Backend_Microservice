@@ -15,7 +15,10 @@ export class AppConfigService {
     return value;
   }
 
-  get<TValue>(key: string, defaultValue: TValue): TValue {
-    return this.configService.get<TValue>(key) ?? defaultValue;
+  get<TValue>(key: string): TValue | undefined;
+  get<TValue>(key: string, defaultValue: TValue): TValue;
+  get<TValue>(key: string, defaultValue?: TValue): TValue | undefined {
+    const value = this.configService.get<TValue>(key);
+    return value ?? defaultValue;
   }
 }

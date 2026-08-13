@@ -6,6 +6,7 @@ const toNumber = (value: string | undefined, defaultValue: number): number => {
 };
 
 export const identityServiceConfig = registerAs('identityService', () => ({
+  port: toNumber(process.env.IDENTITY_SERVICE_PORT, 3501),
   database: {
     url:
       process.env.IDENTITY_SERVICE_DATABASE_URL ??

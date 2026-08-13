@@ -4,7 +4,7 @@ import {
   ClientProxyFactory,
   Transport,
 } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
+import {AppConfigService} from '../../../../libs/config';
 import { firstValueFrom, timeout } from 'rxjs';
 import {
   LoginDto,
@@ -12,13 +12,7 @@ import {
   RefreshTokenRequestDto,
 } from '../routes/auth/dtos/auth.dto';
 import { IDENTITY_AUTH_PATTERNS } from './patterns/identity-client.pattern';
-
-export interface IdentityRequestMetadata {
-  ip: string | null;
-  userAgent: string | null;
-  requestId: string | null;
-  traceId: string | null;
-}
+import { IdentityRequestMetadata } from './metadata/client.metadata';
 
 export interface IdentityRequestPayload<TData> {
   data: TData;
@@ -40,7 +34,7 @@ export class IdentityClient implements OnModuleDestroy {
   private readonly client: ClientProxy;
   private readonly timeoutMs: number;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: AppConfigService) {
     this.timeoutMs = this.configService.get<number>('rabbitmq.timeoutMs', 5000);
     this.client = ClientProxyFactory.create({
       transport: Transport.RMQ,

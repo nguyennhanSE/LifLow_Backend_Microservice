@@ -58,7 +58,7 @@ services:
     ports:
       - "5434:5432"
     networks:
-      - liflow-network
+      - liflow-network-microservice
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
@@ -73,7 +73,7 @@ services:
     volumes:
       - redis_data_microservice:/data
     networks:
-      - liflow-network
+      - liflow-network-microservice
     # Ubuntu/EC2 optimizations
     # sysctls:
     #   - net.core.somaxconn=65535
@@ -82,6 +82,26 @@ services:
     # environment:
     #   - REDIS_REPLICATION_MODE=master
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq-microservice
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    volumes:
+      - rabbitmq_data_microservice:/var/lib/rabbitmq
+    networks:
+      - liflow-network-microservice
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter-microservice
@@ -89,7 +109,7 @@ services:
       - "9100:9100"
     restart: unless-stopped
     networks:
-      - liflow-network
+      - liflow-network-microservice
     pid: host                          # Xem processes của host
     volumes:
       - /proc:/host/proc:ro            # CPU, RAM, processes
@@ -110,7 +130,7 @@ services:
       - prometheus_data_microservice:/prometheus
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      - liflow-network
+      - liflow-network-microservice
 
   loki:
     image: grafana/loki:3.4.2
@@ -123,7 +143,7 @@ services:
       - loki_data_microservice:/loki
     command: -config.file=/etc/loki/local-config.yml
     networks:
-      - liflow-network
+      - liflow-network-microservice
   grafana:
     image: grafana/grafana-oss:latest
     container_name: grafana-microservice
@@ -137,7 +157,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     restart: unless-stopped
     networks:
-      - liflow-network
+      - liflow-network-microservice
 
   redisinsight:
     image: redislabs/redisinsight:latest
@@ -148,7 +168,7 @@ services:
     volumes:
       - redisinsight_data_microservice:/data
     networks:
-      - liflow-network
+      - liflow-network-microservice
       
   backup:
     image: prodrigestivill/postgres-backup-local
@@ -168,7 +188,7 @@ services:
       - BACKUP_KEEP_DAYS=7
       - EXTRA_OPTS=--schema=public
     networks:
-      - liflow-network
+      - liflow-network-microservice
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
     container_name: elasticsearch-microservice
@@ -183,7 +203,7 @@ services:
       - elasticsearch_data_microservice:/usr/share/elasticsearch/data
     restart: unless-stopped
     networks:
-      - liflow-network
+      - liflow-network-microservice
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 10s
@@ -204,7 +224,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - liflow-network
+      - liflow-network-microservice
     
   # es-sync:
   #   build:
@@ -242,3 +262,4 @@ volumes:
   elasticsearch_data_microservice:
   kibana_data_microservice:
   loki_data_microservice:
+  rabbitmq_data_microservice:
