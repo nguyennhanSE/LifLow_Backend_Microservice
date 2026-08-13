@@ -10,6 +10,7 @@ import { GuardModule } from './guards/guard.module';
 import { AuthController } from './routes/auth/auth.controller';
 import { RoleController } from './routes/roles/role.controller';
 import { RoleGuard } from './guards/role.guard';
+import { MembershipController } from './routes/memberships/membership.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { RoleGuard } from './guards/role.guard';
     ClientsModule,
     GuardModule,
   ],
-  controllers: [AuthController, RoleController],
+  controllers: [AuthController, RoleController, MembershipController],
   providers: [
     {
       provide: APP_GUARD,

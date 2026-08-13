@@ -5,4 +5,7 @@ export interface RequestMetadata {
     traceId: string | null;
 }
 
+
 export type IdentityRequestMetadata = RequestMetadata;
+
+export type LoyaltyRequestMetadata = RequestMetadata;

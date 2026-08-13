@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { CommonModule } from 'libs/common';
+import { AppConfigModule } from 'libs/config';
+import { loyaltyServiceConfig } from './config/loyalty-service.config';
 import { LoyaltyServiceController } from './loyalty-service.controller';
 import { LoyaltyServiceService } from './loyalty-service.service';
 
 @Module({
-  imports: [CommonModule],
+  imports: [CommonModule, AppConfigModule.forFeature([loyaltyServiceConfig])],
   controllers: [LoyaltyServiceController],
   providers: [LoyaltyServiceService],
 })

@@ -1,0 +1,15 @@
+export const LOYALTY_MEMBERSHIP_PATTERNS = {
+  createMembership: 'membership.create',
+  listMemberships: 'membership.list',
+  getMembershipById: 'membership.get-by-id',
+  updateMembership: 'membership.update',
+  deleteMembership: 'membership.delete',
+  assignMembershipToUser: 'membership.assign-to-user',
+  getMembershipUsers: 'membership.get-users',
+  getUserMemberships: 'membership.get-user-memberships',
+  getUserActiveMembership: 'membership.get-user-active',
+  updateUserMembership: 'membership.update-user-membership',
+  removeUserMembership: 'membership.remove-user-membership',
+  recalculateAllMemberships: 'membership.recalculate-all',
+  bulkUpdateMemberships: 'membership.bulk-update',
+} as const;

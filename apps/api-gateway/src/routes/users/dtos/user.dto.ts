@@ -2,8 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from "class-validator";
 import { Transform } from "class-transformer";
 import { toLower, trim } from "libs/utils/helper";
-import { ERoleName } from "libs/common/enums/role.enum";
-import { EMembershipStatus } from "libs/common/enums";
+import { EMembershipStatus, ERoleName } from "apps/api-gateway/src/enums";
 
 const RoleFilterOptions = [...Object.values(ERoleName), 'ALL'] as const;
 type RoleFilterType = ERoleName | 'ALL';

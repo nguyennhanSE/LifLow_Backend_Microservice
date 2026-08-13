@@ -9,15 +9,21 @@ export const identityServiceConfig = registerAs('identityService', () => ({
   port: toNumber(process.env.IDENTITY_SERVICE_PORT, 3501),
   database: {
     url:
-      process.env.IDENTITY_SERVICE_DATABASE_URL ??
-      process.env.IDENTITY_DATABASE_URL ??
-      process.env.DATABASE_URL,
-    host: process.env.DATABASE_HOST ?? 'localhost',
-    port: toNumber(process.env.DATABASE_PORT, 5432),
-    username: process.env.DATABASE_USERNAME ?? 'postgres',
-    password: process.env.DATABASE_PASSWORD,
-    name: process.env.DATABASE_NAME ?? 'postgres',
-    schema: process.env.DATABASE_SCHEMA ?? 'public',
+      process.env.IDENTITY_SERVICE_DATABASE_URL ?? "",
+    host:
+      process.env.IDENTITY_SERVICE_DATABASE_HOST ?? "",
+    port: toNumber(
+      process.env.IDENTITY_SERVICE_DATABASE_PORT ?? '',
+      5432
+    ),
+    username:
+      process.env.IDENTITY_SERVICE_DATABASE_USERNAME ?? "",
+    password:
+      process.env.IDENTITY_SERVICE_DATABASE_PASSWORD ?? "",
+    name:
+      process.env.IDENTITY_SERVICE_DATABASE_NAME ?? 'postgres',
+    schema:
+      process.env.IDENTITY_SERVICE_DATABASE_SCHEMA ?? 'public',
   },
   password: {
     hashSaltLength: toNumber(process.env.HASH_SALT_LENGTH, 10),

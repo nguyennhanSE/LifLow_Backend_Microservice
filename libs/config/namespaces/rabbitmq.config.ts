@@ -27,6 +27,7 @@ export const rabbitmqConfig = registerAs('rabbitmq', () => ({
   },
   queues: {
     identity: process.env.IDENTITY_QUEUE ?? 'identity_queue',
+    loyalty: process.env.LOYALTY_QUEUE ?? 'loyalty_queue',
     audit: process.env.AUDIT_QUEUE ?? 'audit_queue',
     notification: process.env.NOTIFICATION_QUEUE ?? 'notification_queue',
   },

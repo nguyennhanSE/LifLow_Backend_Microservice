@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
+import { AppConfigService } from 'libs/config';
 import { LoyaltyServiceModule } from './loyalty-service.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(LoyaltyServiceModule);
-  await app.listen(process.env.port ?? 3000);
+  const configService = app.get(AppConfigService);
+  await app.listen(configService.get<number>('loyaltyService.port', 3502));
 }
-bootstrap();
+void bootstrap();
