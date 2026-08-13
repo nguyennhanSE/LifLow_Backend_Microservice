@@ -6,9 +6,10 @@ import {
   RefreshTokenRequestDto,
   ValidateTokenDto,
 } from './dtos/auth.dto';
-import type { IdentityRequestPayload } from './dtos/auth.dto';
+
 import { IDENTITY_AUTH_PATTERNS } from './patterns/auth.pattern';
 import { AuthService } from './auth.service';
+import type { IdentityRequestPayload } from '../common';
 
 @Controller()
 export class AuthController {

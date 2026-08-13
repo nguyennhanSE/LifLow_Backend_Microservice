@@ -1,18 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { TokenType } from '../../enums';
-
-export interface IdentityRequestMetadata {
-  ip: string | null;
-  userAgent: string | null;
-  requestId: string | null;
-  traceId: string | null;
-}
-
-export interface IdentityRequestPayload<TData> {
-  data: TData;
-  metadata?: IdentityRequestMetadata;
-}
+import { TokenType } from '../enums';
 
 export class LoginDto {
   @Transform(({ value }: { value: unknown }) =>

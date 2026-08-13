@@ -18,6 +18,10 @@ export interface TokenPayload {
   exp?: number;
 }
 
+interface ValidateTokenRequest {
+  accessToken: string;
+}
+
 @Injectable()
 export class IdentityAuthClient {
     constructor(private readonly identityClientService: IdentityClientService) {}
@@ -45,9 +49,9 @@ export class IdentityAuthClient {
         );
     }
     validateToken(token: string, metadata?: IdentityRequestMetadata) {
-        return this.identityClientService.send<string>(
+        return this.identityClientService.send<ValidateTokenRequest>(
             IDENTITY_AUTH_PATTERNS.validateToken,
-            { data: token, metadata },
+            { data: { accessToken: token }, metadata },
         );
     }
 }

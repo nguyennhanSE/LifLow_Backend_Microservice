@@ -8,7 +8,7 @@ import { JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { AppLogger } from 'libs/common/logger';
 import { AppConfigService } from 'libs/config';
-import { TokenType } from '../enums';
+import { TokenType } from './enums';
 import { RolesService } from '../roles/roles.service';
 import { UsersService } from '../users/users.service';
 import {

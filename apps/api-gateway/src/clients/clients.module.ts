@@ -4,5 +4,6 @@ import { IdentityClientModule } from './identity/identity.client.module';
 
 @Module({
   imports: [IdentityClientModule],
+  exports: [IdentityClientModule],
 })
 export class ClientsModule {}
