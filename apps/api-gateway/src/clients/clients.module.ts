@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { IdentityClient } from './identity.client';
+import { IdentityClientModule } from './identity/identity.client.module';
+
 
 @Module({
-  providers: [IdentityClient],
-  exports: [IdentityClient],
+  imports: [IdentityClientModule],
 })
 export class ClientsModule {}

@@ -1,12 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
-  IdentityRequestPayload,
   LoginDto,
   LogoutDto,
   RefreshTokenRequestDto,
   ValidateTokenDto,
 } from './dtos/auth.dto';
+import type { IdentityRequestPayload } from './dtos/auth.dto';
 import { IDENTITY_AUTH_PATTERNS } from './patterns/auth.pattern';
 import { AuthService } from './auth.service';
 

@@ -1,18 +1,19 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { ResponseModel } from 'libs/common/response';
-import { IdentityClient } from '../../clients/identity.client';
+
 import { Public } from '../../guards/public.decorator';
 import { LoginDto, LogoutDto, RefreshTokenRequestDto } from './dtos/auth.dto';
+import { IdentityAuthClient } from '../../clients/identity/identity-auth.client';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly identityClient: IdentityClient) {}
+  constructor(private readonly identityAuthClient: IdentityAuthClient) {}
 
   @Post('login')
   @Public()
   async login(@Body() loginDto: LoginDto, @Req() request: Request) {
-    const result = await this.identityClient.login(loginDto, {
+    const result = await this.identityAuthClient.login(loginDto, {
       ip: this.getClientIp(request),
       userAgent: this.getHeader(request.headers['user-agent']) ?? null,
       requestId:
@@ -31,7 +32,7 @@ export class AuthController {
   @Post('logout')
   @Public()
   async logout(@Body() logoutDto: LogoutDto) {
-    const result = await this.identityClient.logout(logoutDto);
+    const result = await this.identityAuthClient.logout(logoutDto);
 
     return this.toResponseModel(result);
   }
@@ -42,7 +43,7 @@ export class AuthController {
     @Body() refreshTokenDto: RefreshTokenRequestDto,
     @Req() request: Request,
   ) {
-    const result = await this.identityClient.refreshToken(refreshTokenDto, {
+    const result = await this.identityAuthClient.refreshToken(refreshTokenDto, {
       ip: this.getClientIp(request),
       userAgent: this.getHeader(request.headers['user-agent']) ?? null,
       requestId:

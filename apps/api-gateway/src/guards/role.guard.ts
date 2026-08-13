@@ -13,8 +13,9 @@ import { IdentityAuthClient, TokenPayload } from '../clients/identity/identity-a
 interface AuthenticatedRequest extends Request {
   user?: TokenPayload;
 }
+
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class RoleGuard implements CanActivate {
   constructor(
     private readonly identityAuthClient: IdentityAuthClient,
     private readonly reflector: Reflector,
@@ -26,36 +27,33 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
+    if (isPublic) {
+      return true; // Allow access to public routes
+    }
+
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true; // No roles required, allow access
+    }
+
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const token = this.extractTokenFromHeader(request);
-
-    if (isPublic) {
-      if (token) {
-        await this.attachUserIfTokenIsValid(request, token);
-      }
-
-      return true;
-    }
 
     if (!token) {
       throw new UnauthorizedException('Access token is required');
     }
 
     const payload = await this.validateToken(token);
-    request.user = payload;
+    const hasRequiredRole = requiredRoles.some(role => payload.roles.includes(role));
+    if (!hasRequiredRole) {
+      throw new UnauthorizedException('You do not have the required role(s)');
+    }
 
     return true;
-  }
-
-  private async attachUserIfTokenIsValid(
-    request: AuthenticatedRequest,
-    token: string,
-  ) {
-    try {
-      request.user = await this.validateToken(token);
-    } catch {
-      request.user = undefined;
-    }
   }
 
   private async validateToken(token: string): Promise<TokenPayload> {
@@ -67,34 +65,18 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private unwrapPayload(result: unknown): TokenPayload {
-    if (this.isTokenPayload(result)) {
-      return result;
+  private unwrapPayload(result: any): TokenPayload {
+    if (result && result.payload) {
+      return result.payload as TokenPayload;
     }
-
-    if (
-      result &&
-      typeof result === 'object' &&
-      'data' in result &&
-      this.isTokenPayload(result.data)
-    ) {
-      return result.data;
-    }
-
     throw new UnauthorizedException('Invalid token payload');
   }
 
-  private isTokenPayload(value: unknown): value is TokenPayload {
-    return (
-      !!value &&
-      typeof value === 'object' &&
-      'sub' in value &&
-      typeof value.sub === 'string'
-    );
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+  private extractTokenFromHeader(request: AuthenticatedRequest): string | null {
+    const authHeader = request.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.slice(7); // Remove 'Bearer ' prefix
+    }
+    return null;
   }
 }
