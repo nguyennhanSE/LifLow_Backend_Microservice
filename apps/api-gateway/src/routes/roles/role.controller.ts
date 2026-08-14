@@ -8,8 +8,10 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -40,8 +42,11 @@ export class RoleController {
   @Roles(ERoleName.ADMIN)
   @ApiOperation({ summary: 'Create a new role' })
   @ApiResponse({ status: 201, description: 'Role created successfully' })
-  async create(@Body() createRoleDto: CreateRoleDto) {
-    const result = await this.identityRoleClient.createRole(createRoleDto);
+  async create(@Body() createRoleDto: CreateRoleDto, @Req() request: Request) {
+    const result = await this.identityRoleClient.createRole(
+      createRoleDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -50,8 +55,11 @@ export class RoleController {
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
   @ApiOperation({ summary: 'Get all roles with pagination and search' })
   @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
-  async findAll(@Query() query: RoleQueryDto) {
-    const result = await this.identityRoleClient.listRoles(query);
+  async findAll(@Query() query: RoleQueryDto, @Req() request: Request) {
+    const result = await this.identityRoleClient.listRoles(
+      query,
+      request.metadata,
+    );
 
     return this.toPaginateNoCountResponseModel(
       result as IPaginateNoCount<unknown>,
@@ -62,8 +70,11 @@ export class RoleController {
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
   @ApiOperation({ summary: 'Search roles' })
   @ApiResponse({ status: 200, description: 'Search results retrieved successfully' })
-  async search(@Query() query: RoleQueryDto) {
-    const result = await this.identityRoleClient.searchRoles(query);
+  async search(@Query() query: RoleQueryDto, @Req() request: Request) {
+    const result = await this.identityRoleClient.searchRoles(
+      query,
+      request.metadata,
+    );
 
     return this.toPaginateNoCountResponseModel(
       result as IPaginateNoCount<unknown>,
@@ -75,8 +86,14 @@ export class RoleController {
   @ApiOperation({ summary: 'Get role by ID' })
   @ApiResponse({ status: 200, description: 'Role retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    const result = await this.identityRoleClient.getRoleById(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: Request,
+  ) {
+    const result = await this.identityRoleClient.getRoleById(
+      id,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -89,8 +106,13 @@ export class RoleController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRoleDto: UpdateRoleDto,
+    @Req() request: Request,
   ) {
-    const result = await this.identityRoleClient.updateRole(id, updateRoleDto);
+    const result = await this.identityRoleClient.updateRole(
+      id,
+      updateRoleDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -102,11 +124,13 @@ export class RoleController {
   @ApiResponse({ status: 404, description: 'Role not found' })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: Request,
     @Query('force') force?: string,
   ) {
     const result = await this.identityRoleClient.deleteRole(
       id,
       force === 'true',
+      request.metadata,
     );
 
     return this.toResponseModel(result);

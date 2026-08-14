@@ -45,9 +45,14 @@ export class MembershipController {
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
   @ApiOperation({ summary: 'Create a new membership tier' })
   @ApiResponse({ status: 201, description: 'Membership created successfully' })
-  async create(@Body() createMembershipDto: CreateMembershipDto) {
-    const result =
-      await this.loyaltyMembershipClient.createMembership(createMembershipDto);
+  async create(
+    @Body() createMembershipDto: CreateMembershipDto,
+    @Req() request: Request,
+  ) {
+    const result = await this.loyaltyMembershipClient.createMembership(
+      createMembershipDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -62,8 +67,11 @@ export class MembershipController {
   )
   @ApiOperation({ summary: 'Get paginated list of memberships' })
   @ApiResponse({ status: 200, description: 'Memberships retrieved successfully' })
-  async findAll(@Query() query: QueryMembershipDto) {
-    const result = await this.loyaltyMembershipClient.listMemberships(query);
+  async findAll(@Query() query: QueryMembershipDto, @Req() request: Request) {
+    const result = await this.loyaltyMembershipClient.listMemberships(
+      query,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -72,9 +80,14 @@ export class MembershipController {
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER, ERoleName.MANAGER)
   @ApiOperation({ summary: 'Assign membership to a user' })
   @ApiResponse({ status: 201, description: 'Membership assigned successfully' })
-  async assignMembership(@Body() assignDto: AssignMembershipDto) {
-    const result =
-      await this.loyaltyMembershipClient.assignMembershipToUser(assignDto);
+  async assignMembership(
+    @Body() assignDto: AssignMembershipDto,
+    @Req() request: Request,
+  ) {
+    const result = await this.loyaltyMembershipClient.assignMembershipToUser(
+      assignDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -83,9 +96,11 @@ export class MembershipController {
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
   @ApiOperation({ summary: 'Manually trigger membership recalculation for all users' })
   @ApiResponse({ status: 200, description: 'Recalculation job enqueued' })
-  async recalculateAllMemberships() {
+  async recalculateAllMemberships(@Req() request: Request) {
     const result =
-      await this.loyaltyMembershipClient.recalculateAllMemberships();
+      await this.loyaltyMembershipClient.recalculateAllMemberships(
+        request.metadata,
+      );
 
     return this.toResponseModel(result);
   }
@@ -94,9 +109,14 @@ export class MembershipController {
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER, ERoleName.MANAGER)
   @ApiOperation({ summary: 'Bulk update memberships' })
   @ApiResponse({ status: 200, description: 'Bulk update completed' })
-  async bulkUpdateMemberships(@Body() bulkUpdateDto: BulkUpdateMembershipDto) {
-    const result =
-      await this.loyaltyMembershipClient.bulkUpdateMemberships(bulkUpdateDto);
+  async bulkUpdateMemberships(
+    @Body() bulkUpdateDto: BulkUpdateMembershipDto,
+    @Req() request: Request,
+  ) {
+    const result = await this.loyaltyMembershipClient.bulkUpdateMemberships(
+      bulkUpdateDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -115,10 +135,12 @@ export class MembershipController {
   async getUserMemberships(
     @Param('userId') userId: string,
     @Query() query: QueryUserMembershipsDto,
+    @Req() request: Request,
   ) {
     const result = await this.loyaltyMembershipClient.getUserMemberships(
       userId,
       query,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -136,9 +158,15 @@ export class MembershipController {
   @ApiOperation({ summary: 'Get active membership for a user' })
   @ApiParam({ name: 'userId', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Active membership retrieved successfully' })
-  async getUserActiveMembership(@Param('userId') userId: string) {
+  async getUserActiveMembership(
+    @Param('userId') userId: string,
+    @Req() request: Request,
+  ) {
     const result =
-      await this.loyaltyMembershipClient.getUserActiveMembership(userId);
+      await this.loyaltyMembershipClient.getUserActiveMembership(
+        userId,
+        request.metadata,
+      );
 
     return this.toResponseModel(result);
   }
@@ -151,10 +179,12 @@ export class MembershipController {
   async updateUserMembership(
     @Param('userId') userId: string,
     @Body() updateDto: UpdateUserMembershipDto,
+    @Req() request: Request,
   ) {
     const result = await this.loyaltyMembershipClient.updateUserMembership(
       userId,
       updateDto,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -169,10 +199,12 @@ export class MembershipController {
   async removeUserMembership(
     @Param('userId') userId: string,
     @Param('membershipId', ParseUUIDPipe) membershipId: string,
+    @Req() request: Request,
   ) {
     const result = await this.loyaltyMembershipClient.removeUserMembership(
       userId,
       membershipId,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -192,10 +224,12 @@ export class MembershipController {
   async getMembershipUsers(
     @Param('membershipId', ParseUUIDPipe) membershipId: string,
     @Query() query: QueryUserMembershipsDto,
+    @Req() request: Request,
   ) {
     const result = await this.loyaltyMembershipClient.getMembershipUsers(
       membershipId,
       query,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -212,8 +246,14 @@ export class MembershipController {
   @ApiOperation({ summary: 'Get membership by ID' })
   @ApiParam({ name: 'id', description: 'Membership ID' })
   @ApiResponse({ status: 200, description: 'Membership retrieved successfully' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    const result = await this.loyaltyMembershipClient.getMembershipById(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: Request,
+  ) {
+    const result = await this.loyaltyMembershipClient.getMembershipById(
+      id,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -231,18 +271,7 @@ export class MembershipController {
     const result = await this.loyaltyMembershipClient.updateMembership(
       id,
       updateMembershipDto,
-      {
-        ip: this.getClientIp(request),
-        userAgent: this.getHeader(request.headers['user-agent']) ?? null,
-        requestId:
-          this.getHeader(request.headers['x-request-id']) ??
-          this.getHeader(request.headers['request-id']) ??
-          null,
-        traceId:
-          this.getHeader(request.headers['x-trace-id']) ??
-          this.getHeader(request.headers['trace-id']) ??
-          null,
-      },
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -253,8 +282,11 @@ export class MembershipController {
   @ApiOperation({ summary: 'Delete membership' })
   @ApiParam({ name: 'id', description: 'Membership ID' })
   @ApiResponse({ status: 200, description: 'Membership deleted successfully' })
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    const result = await this.loyaltyMembershipClient.deleteMembership(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string, @Req() request: Request) {
+    const result = await this.loyaltyMembershipClient.deleteMembership(
+      id,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -264,22 +296,5 @@ export class MembershipController {
     responseModel.setData(data);
 
     return responseModel;
-  }
-
-  private getHeader(value: string | string[] | undefined): string | undefined {
-    if (Array.isArray(value)) {
-      return value[0];
-    }
-
-    return value;
-  }
-
-  private getClientIp(request: Request): string | null {
-    const forwardedFor = this.getHeader(request.headers['x-forwarded-for']);
-    if (forwardedFor) {
-      return forwardedFor.split(',')[0]?.trim() || null;
-    }
-
-    return request.ip ?? request.socket?.remoteAddress ?? null;
   }
 }

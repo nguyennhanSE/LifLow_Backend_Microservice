@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { CommonModule } from 'libs/common';
 import { AppConfigModule } from 'libs/config';
 
@@ -12,6 +12,8 @@ import { RoleController } from './routes/roles/role.controller';
 import { RoleGuard } from './guards/role.guard';
 import { MembershipController } from './routes/memberships/membership.controller';
 import { UserController } from './routes/users/user.controller';
+import { RequestInterceptor } from './interceptors/request.interceptor';
+import { TraceModule } from './traces/trace.module';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { UserController } from './routes/users/user.controller';
     AppConfigModule.forFeature([apiGatewayConfig]),
     ClientsModule,
     GuardModule,
+    TraceModule,
   ],
   controllers: [
     AuthController,
@@ -34,7 +37,11 @@ import { UserController } from './routes/users/user.controller';
     {
       provide: APP_GUARD,
       useClass: RoleGuard,
-    }
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestInterceptor,
+    },
   ],
 })
 export class ApiGatewayModule {}

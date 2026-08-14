@@ -32,6 +32,15 @@ const toStringList = (
 
 export const apiGatewayConfig = registerAs('apiGateway', () => ({
   port: toNumber(process.env.API_GATEWAY_PORT ?? process.env.APP_PORT, 3500),
+  database: {
+    url: process.env.API_GATEWAY_DATABASE_URL ?? '',
+    host: process.env.API_GATEWAY_DATABASE_HOST ?? '',
+    port: toNumber(process.env.API_GATEWAY_DATABASE_PORT ?? '', 5432),
+    username: process.env.API_GATEWAY_DATABASE_USERNAME ?? '',
+    password: process.env.API_GATEWAY_DATABASE_PASSWORD ?? '',
+    name: process.env.API_GATEWAY_DATABASE_NAME ?? '',
+    schema: process.env.API_GATEWAY_DATABASE_SCHEMA ?? '',
+  },
   cors: {
     enabled: toBoolean(process.env.API_GATEWAY_CORS_ENABLED, true),
     origins: toStringList(process.env.API_GATEWAY_CORS_ORIGINS, [

@@ -56,8 +56,11 @@ export class UserController {
   @Public()
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
-  async create(@Body() createUserDto: CreateUserDto) {
-    const result = await this.identityUserClient.createUser(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto, @Req() request: Request) {
+    const result = await this.identityUserClient.createUser(
+      createUserDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -80,6 +83,7 @@ export class UserController {
     const result = await this.identityUserClient.updateMyAvatar(
       userId,
       updateAvatarDto.avatarUrl,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -103,6 +107,7 @@ export class UserController {
     const result = await this.identityUserClient.updateMyProfile(
       userId,
       updateProfileDto,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -121,6 +126,7 @@ export class UserController {
   async getMyPoints(@Req() request: AuthenticatedRequest) {
     const result = await this.identityUserClient.getMyPoints(
       this.getCurrentUserId(request),
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -143,6 +149,7 @@ export class UserController {
     const result = await this.identityUserClient.getMyInfo(
       this.getCurrentUserId(request),
       query,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -165,6 +172,7 @@ export class UserController {
     const result = await this.identityUserClient.updateMyPassword(
       this.getCurrentUserId(request),
       updatePasswordDto,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -179,9 +187,10 @@ export class UserController {
     ERoleName.CS_MANAGER,
   )
   @ApiOperation({ summary: 'Get paginated list of users' })
-  async list(@Query() query: GetUsersQueryDto) {
+  async list(@Query() query: GetUsersQueryDto, @Req() request: Request) {
     const result = await this.identityUserClient.listUsers(
       this.normalizeListQuery(query),
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -190,9 +199,13 @@ export class UserController {
   @Get('admin-list')
   @Roles(ERoleName.ADMIN)
   @ApiOperation({ summary: 'Get paginated list of admin users' })
-  async getAdminList(@Query() query: GetAdminListQueryDto) {
+  async getAdminList(
+    @Query() query: GetAdminListQueryDto,
+    @Req() request: Request,
+  ) {
     const result = await this.identityUserClient.getAdminList(
       this.normalizeListQuery(query),
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -207,8 +220,10 @@ export class UserController {
     ERoleName.CS_MANAGER,
   )
   @ApiOperation({ summary: 'Get new sign-up count today' })
-  async getNewSignupToday() {
-    const result = await this.identityUserClient.getNewSignupToday();
+  async getNewSignupToday(@Req() request: Request) {
+    const result = await this.identityUserClient.getNewSignupToday(
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -216,8 +231,11 @@ export class UserController {
   @Get('check-id')
   @Public()
   @ApiOperation({ summary: 'Check if user ID exists' })
-  async checkUserId(@Query('id') id: string) {
-    const result = await this.identityUserClient.checkUserId(id);
+  async checkUserId(@Query('id') id: string, @Req() request: Request) {
+    const result = await this.identityUserClient.checkUserId(
+      id,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -225,8 +243,14 @@ export class UserController {
   @Get('find-id')
   @Public()
   @ApiOperation({ summary: 'Find user ID by name and email' })
-  async findUserId(@Query() findUserIdDto: FindUserIdDto) {
-    const result = await this.identityUserClient.findUserId(findUserIdDto);
+  async findUserId(
+    @Query() findUserIdDto: FindUserIdDto,
+    @Req() request: Request,
+  ) {
+    const result = await this.identityUserClient.findUserId(
+      findUserIdDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -234,8 +258,14 @@ export class UserController {
   @Get('find-password')
   @Public()
   @ApiOperation({ summary: 'Reset password by ID, name and email' })
-  async findPassword(@Query() findPasswordDto: FindPasswordDto) {
-    const result = await this.identityUserClient.findPassword(findPasswordDto);
+  async findPassword(
+    @Query() findPasswordDto: FindPasswordDto,
+    @Req() request: Request,
+  ) {
+    const result = await this.identityUserClient.findPassword(
+      findPasswordDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -243,8 +273,11 @@ export class UserController {
   @Get('member/:id')
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER, ERoleName.MANAGER)
   @ApiOperation({ summary: 'Get user by ID' })
-  async findOne(@Param('id') id: string) {
-    const result = await this.identityUserClient.getUserById(id);
+  async findOne(@Param('id') id: string, @Req() request: Request) {
+    const result = await this.identityUserClient.getUserById(
+      id,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -254,15 +287,20 @@ export class UserController {
   @ApiOperation({ summary: 'Get users by role' })
   async getUsersByRole(
     @Param('roleId', ParseUUIDPipe) roleId: string,
+    @Req() request: Request,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
-    const result = await this.identityUserClient.getUsersByRole(roleId, {
-      page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 20,
-      search,
-    });
+    const result = await this.identityUserClient.getUsersByRole(
+      roleId,
+      {
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 20,
+        search,
+      },
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -275,7 +313,10 @@ export class UserController {
     @Req() request: AuthenticatedRequest,
   ) {
     this.assertSelfOrAdmin(request, userId, 'Cannot view other users permissions');
-    const result = await this.identityUserClient.getUserPermissions(userId);
+    const result = await this.identityUserClient.getUserPermissions(
+      userId,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -286,10 +327,12 @@ export class UserController {
   async updateUserPermissions(
     @Param('userId') userId: string,
     @Body() updateDto: UpdateUserPermissionsDto,
+    @Req() request: Request,
   ) {
     const result = await this.identityUserClient.updateUserPermissions(
       userId,
       updateDto.permissions,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -303,7 +346,10 @@ export class UserController {
     @Req() request: AuthenticatedRequest,
   ) {
     this.assertSelfOrAdmin(request, userId, 'Cannot view other users roles');
-    const result = await this.identityUserClient.getUserRoles(userId);
+    const result = await this.identityUserClient.getUserRoles(
+      userId,
+      request.metadata,
+    );
 
     return this.toResponseModel({ userId, roles: result });
   }
@@ -314,10 +360,12 @@ export class UserController {
   async assignRolesToUser(
     @Param('userId') userId: string,
     @Body() assignDto: AssignRolesToUserDto,
+    @Req() request: Request,
   ) {
     const result = await this.identityUserClient.assignRolesToUser(
       userId,
       assignDto.roleIds,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -329,10 +377,12 @@ export class UserController {
   async removeRoleFromUser(
     @Param('userId') userId: string,
     @Param('roleId', ParseUUIDPipe) roleId: string,
+    @Req() request: Request,
   ) {
     const result = await this.identityUserClient.removeRoleFromUser(
       userId,
       roleId,
+      request.metadata,
     );
 
     return this.toResponseModel(result);
@@ -341,8 +391,16 @@ export class UserController {
   @Patch(':id')
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER, ERoleName.MANAGER)
   @ApiOperation({ summary: 'Update user information' })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const result = await this.identityUserClient.updateUser(id, updateUserDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() request: Request,
+  ) {
+    const result = await this.identityUserClient.updateUser(
+      id,
+      updateUserDto,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
@@ -350,8 +408,11 @@ export class UserController {
   @Delete(':id')
   @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
   @ApiOperation({ summary: 'Delete user' })
-  async remove(@Param('id') id: string) {
-    const result = await this.identityUserClient.deleteUser(id);
+  async remove(@Param('id') id: string, @Req() request: Request) {
+    const result = await this.identityUserClient.deleteUser(
+      id,
+      request.metadata,
+    );
 
     return this.toResponseModel(result);
   }
