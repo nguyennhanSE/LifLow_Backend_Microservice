@@ -5,4 +5,5 @@ export const MEMBERSHIP_PATTERNS = {
   updateMembership: 'membership.update',
   deleteMembership: 'membership.delete',
   bulkUpdateMemberships: 'membership.bulk-update',
+  membershipUpdated: 'membership.updated',
 } as const;

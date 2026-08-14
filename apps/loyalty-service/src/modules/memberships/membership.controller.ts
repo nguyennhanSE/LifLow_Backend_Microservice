@@ -43,6 +43,7 @@ export class MembershipController {
     return this.membershipService.update(
       payload.data.id,
       payload.data.updateMembershipDto,
+      payload.metadata,
     );
   }
 

@@ -2,11 +2,13 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type { IPaginate } from 'libs/common/pagination/pagination.model';
 import type { Prisma } from 'libs/prisma/generated/loyalty-service/client';
+import type { LoyaltyRequestMetadata } from '../../common';
+import { AppLogger } from 'libs/common/logger/logger.service';
+import { IdentityClientService } from '../../clients/identity/identity-client.service';
 import {
   BulkUpdateMembershipItemDto,
   CreateMembershipDto,
@@ -14,13 +16,21 @@ import {
   UpdateMembershipDto,
 } from './dtos/membership.dto';
 import { MembershipEntity } from './entities/membership.entity';
-import { MembershipRepository } from './repositories/membership.repository';
+import {
+  MembershipPriceSnapshot,
+  MembershipRepository,
+} from './repositories/membership.repository';
+import { MEMBERSHIP_PATTERNS } from './patterns/membership.pattern';
 
 @Injectable()
 export class MembershipService {
-  private readonly logger = new Logger(MembershipService.name);
+  private readonly context = MembershipService.name;
 
-  constructor(private readonly membershipRepository: MembershipRepository) {}
+  constructor(
+    private readonly membershipRepository: MembershipRepository,
+    private readonly logger: AppLogger,
+    private readonly identityClientService: IdentityClientService,
+  ) {}
 
   async create(
     createMembershipDto: CreateMembershipDto,
@@ -63,8 +73,9 @@ export class MembershipService {
   async update(
     id: string,
     updateMembershipDto: UpdateMembershipDto,
+    metadata?: LoyaltyRequestMetadata,
   ): Promise<MembershipEntity> {
-    await this.findOne(id);
+    const previousMembership = await this.findOne(id);
 
     if (updateMembershipDto.name) {
       const existing = await this.membershipRepository.getMembershipByName(
@@ -78,7 +89,21 @@ export class MembershipService {
       }
     }
 
-    return this.membershipRepository.updateMembership(id, updateMembershipDto);
+    const membership = await this.membershipRepository.updateMembership(
+      id,
+      updateMembershipDto,
+    );
+    const allMemberships =
+      await this.membershipRepository.getMembershipPriceSnapshots();
+
+    this.emitMembershipUpdated(
+      previousMembership,
+      membership,
+      allMemberships,
+      metadata,
+    );
+
+    return membership;
   }
 
   async remove(id: string): Promise<{ message: string; membership: MembershipEntity }> {
@@ -181,5 +206,32 @@ export class MembershipService {
       update.membershipId,
       updateData,
     );
+  }
+
+  private emitMembershipUpdated(
+    previousMembership: MembershipEntity,
+    membership: MembershipEntity,
+    allMemberships: MembershipPriceSnapshot[],
+    metadata?: LoyaltyRequestMetadata,
+  ) {
+    void this.identityClientService
+      .emit(MEMBERSHIP_PATTERNS.membershipUpdated, {
+        data: {
+          membershipId: membership.id,
+          previousMembership,
+          membership,
+          allMemberships,
+        },
+        metadata,
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+
+        this.logger.error(
+          `[${this.context}] Failed to emit ${MEMBERSHIP_PATTERNS.membershipUpdated}: ${message}`,
+          error instanceof Error ? error : undefined,
+          this.context,
+        );
+      });
   }
 }

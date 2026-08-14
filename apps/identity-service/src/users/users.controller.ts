@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import type { IdentityRequestPayload } from '../common';
 import {
   AssignRolesToUserPayload,
@@ -24,11 +24,16 @@ import {
   UserParamPayload,
 } from './dtos/user.dto';
 import { IDENTITY_USER_PATTERNS } from './patterns/user.pattern';
+import type { RecalculateUserMembershipLevelJobPayload } from './queue/user-queue.constant';
+import { UserQueueService } from './queue/user-queue.service';
 import { UsersService } from './users.service';
 
 @Controller()
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userQueueService: UserQueueService,
+  ) {}
 
   @MessagePattern(IDENTITY_USER_PATTERNS.createUser)
   createUser(@Payload() payload: IdentityRequestPayload<CreateUserDto>) {
@@ -208,5 +213,24 @@ export class UsersController {
   @MessagePattern(IDENTITY_USER_PATTERNS.findPassword)
   findPassword(@Payload() payload: IdentityRequestPayload<FindPasswordDto>) {
     return this.usersService.resetPassword(payload.data);
+  }
+
+  @EventPattern(IDENTITY_USER_PATTERNS.membershipUpdated)
+  async handleMembershipUpdated(
+    @Payload()
+    payload: IdentityRequestPayload<
+      Omit<RecalculateUserMembershipLevelJobPayload, 'metadata'>
+    >,
+  ) {
+    const job = await this.userQueueService.enqueueRecalculateMembershipLevel({
+      ...payload.data,
+      metadata: payload.metadata,
+    });
+
+    return {
+      enqueued: true,
+      jobId: job.id,
+      metadata: payload.metadata,
+    };
   }
 }

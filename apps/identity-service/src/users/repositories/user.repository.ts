@@ -384,6 +384,40 @@ export class UserRepository {
     });
   }
 
+  updateUsersMembershipLevelByCurrentLevel(
+    currentMembershipLevel: string,
+    nextMembershipLevel: string,
+  ): Promise<Prisma.BatchPayload> {
+    return this.prisma.user.updateMany({
+      where: { membershipLevel: currentMembershipLevel },
+      data: {
+        membershipLevel: nextMembershipLevel,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  updateUsersMembershipLevelByPurchaseRange(params: {
+    membershipLevel: string;
+    minPurchaseAmount: number;
+    maxPurchaseAmount?: number;
+  }): Promise<Prisma.BatchPayload> {
+    return this.prisma.user.updateMany({
+      where: {
+        totalPurchaseAmount: {
+          gte: params.minPurchaseAmount,
+          ...(params.maxPurchaseAmount !== undefined
+            ? { lt: params.maxPurchaseAmount }
+            : {}),
+        },
+      },
+      data: {
+        membershipLevel: params.membershipLevel,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   private buildUserWhere(
     filter: UserListFilter,
     excludeUserRole: boolean,

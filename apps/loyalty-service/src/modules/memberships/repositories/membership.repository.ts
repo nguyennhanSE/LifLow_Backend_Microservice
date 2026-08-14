@@ -15,6 +15,11 @@ export interface MembershipPaginateOptions {
   name?: string;
 }
 
+export interface MembershipPriceSnapshot {
+  membershipName: string;
+  membershipMinPrice: number;
+}
+
 @Injectable()
 export class MembershipRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -93,6 +98,27 @@ export class MembershipRepository {
     });
 
     return toMembershipEntity(membership);
+  }
+
+  async getMembershipPriceSnapshots(): Promise<MembershipPriceSnapshot[]> {
+    const memberships = await this.prisma.membership.findMany({
+      where: {
+        name: { not: null },
+        minPrice: { not: null },
+      },
+      select: {
+        name: true,
+        minPrice: true,
+      },
+      orderBy: {
+        minPrice: 'desc',
+      },
+    });
+
+    return memberships.map((membership) => ({
+      membershipName: membership.name ?? '',
+      membershipMinPrice: membership.minPrice ?? 0,
+    }));
   }
 
   private buildMembershipWhere(

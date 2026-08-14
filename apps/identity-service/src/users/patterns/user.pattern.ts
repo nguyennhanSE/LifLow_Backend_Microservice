@@ -29,4 +29,6 @@ export const IDENTITY_USER_PATTERNS = {
   checkUserId: 'user.check-id',
   findUserId: 'user.find-id',
   findPassword: 'user.find-password',
+
+  membershipUpdated: 'membership.updated',
 } as const;
