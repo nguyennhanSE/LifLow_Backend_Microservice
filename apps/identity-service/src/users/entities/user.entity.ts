@@ -18,23 +18,16 @@ export class UserEntity {
   createdAt?: Date | null; // @map("created_at")
   updatedAt?: Date | null; // @map("updated_at")
   roles?: RoleInfo[]; // Roles from userRole table
-  permissions?: PermissionInfo[]; // Permissions from rolePermission table
-  situation?: 'Active' | 'Dormant' | 'Withdrawn'; // Account status
-  membership?: MembershipInfo | null; // Memberships from userMembership table
   // Extensions
-  orderNumber?: number; // Order number from order table
   nickName?: string | null; // @map("nick_name")
   statusMessage?: string | null; // @map("status_message")
   avatarURL?: string | null; // @map("avatar_url")
+
+  // Additional extensions
+  membership?: MembershipInfo | null;
 }
 
 export class RoleInfo {
-  id!: string;
-  name!: string;
-  description?: string | null;
-}
-
-export class PermissionInfo {
   id!: string;
   name!: string;
   description?: string | null;
@@ -46,8 +39,4 @@ export class MembershipInfo {
   description?: string | null;
 }
 
-export class UserInfoEntity extends UserEntity {
-  numberOfRecipes!: number;
-  numberOfOrdergroups!: number;
-}
 

@@ -24,7 +24,6 @@ import { ERoleName } from '../../enums';
 import { RoleGuard } from '../../guards/role.guard';
 import { Roles } from '../../guards/roles.decorator';
 import {
-  AssignRolesToUserDto,
   CreateRoleDto,
   RoleQueryDto,
   UpdateRoleDto,
@@ -111,60 +110,6 @@ export class RoleController {
     );
 
     return this.toResponseModel(result);
-  }
-
-  @Post(':id/users')
-  @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
-  @ApiOperation({ summary: 'Assign role to multiple users' })
-  @ApiResponse({ status: 200, description: 'Role assigned successfully' })
-  async assignRoleToUsers(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() assignDto: AssignRolesToUserDto,
-  ) {
-    const result = await this.identityRoleClient.assignRoleToUsers(
-      id,
-      assignDto,
-    );
-
-    return this.toResponseModel(result);
-  }
-
-  @Delete(':roleId/users/:userId')
-  @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
-  @ApiOperation({ summary: 'Revoke role from user' })
-  @ApiResponse({ status: 200, description: 'Role revoked successfully' })
-  async revokeRoleFromUser(
-    @Param('roleId', ParseUUIDPipe) roleId: string,
-    @Param('userId') userId: string,
-  ) {
-    const result = await this.identityRoleClient.revokeRoleFromUser(
-      roleId,
-      userId,
-    );
-
-    return this.toResponseModel(result);
-  }
-
-  @Get(':id/users')
-  @Roles(ERoleName.ADMIN, ERoleName.GENERAL_MANAGER)
-  @ApiOperation({ summary: 'Get all users with specific role' })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
-  async getUsersByRole(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('search') search?: string,
-  ) {
-    const result = await this.identityRoleClient.getUsersByRole({
-      roleId: id,
-      page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 20,
-      search,
-    });
-
-    return this.toPaginateNoCountResponseModel(
-      result as IPaginateNoCount<unknown>,
-    );
   }
 
   private toResponseModel(data: unknown): ResponseModel {

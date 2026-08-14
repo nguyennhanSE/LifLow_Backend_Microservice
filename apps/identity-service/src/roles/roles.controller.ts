@@ -3,11 +3,8 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import type { IPaginateNoCount } from 'libs/common/pagination/pagination.model';
 import type { IdentityRequestPayload } from '../common';
 import {
-  AssignRoleToUsersPayload,
   CreateRoleDto,
   DeleteRolePayload,
-  GetUsersByRolePayload,
-  RevokeRoleFromUserPayload,
   RoleIdPayload,
   RoleQueryDto,
   UpdateRolePayload,
@@ -56,35 +53,4 @@ export class RolesController {
     return this.rolesService.remove(payload.data.id, payload.data.force);
   }
 
-  @MessagePattern(IDENTITY_ROLE_PATTERNS.assignRoleToUsers)
-  assignRoleToUsers(
-    @Payload() payload: IdentityRequestPayload<AssignRoleToUsersPayload>,
-  ) {
-    return this.rolesService.assignRoleToUsers(
-      payload.data.id,
-      payload.data.assignDto,
-    );
-  }
-
-  @MessagePattern(IDENTITY_ROLE_PATTERNS.revokeRoleFromUser)
-  revokeRoleFromUser(
-    @Payload() payload: IdentityRequestPayload<RevokeRoleFromUserPayload>,
-  ) {
-    return this.rolesService.revokeRoleFromUser(
-      payload.data.roleId,
-      payload.data.userId,
-    );
-  }
-
-  @MessagePattern(IDENTITY_ROLE_PATTERNS.getUsersByRole)
-  getUsersByRole(
-    @Payload() payload: IdentityRequestPayload<GetUsersByRolePayload>,
-  ): Promise<IPaginateNoCount<unknown>> {
-    return this.rolesService.getUsersByRole(
-      payload.data.roleId,
-      payload.data.page,
-      payload.data.limit,
-      payload.data.search,
-    );
-  }
 }

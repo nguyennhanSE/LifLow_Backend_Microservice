@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from "class-validator";
+import { IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength } from "class-validator";
 import { Transform } from "class-transformer";
 import { toLower, trim } from "libs/utils/helper";
 import { EMembershipStatus, ERoleName } from "apps/api-gateway/src/enums";
@@ -823,4 +823,38 @@ export class UpdatePasswordWithOldDto {
     // @MinLength(10)
     // @MaxLength(16)
     newPassword!: string;
+}
+
+export class UpdateAvatarUrlDto {
+    @ApiProperty({
+        description: 'Avatar URL',
+        example: 'https://example.com/avatar.png',
+        type: String
+    })
+    @IsNotEmpty()
+    @IsString()
+    avatarUrl!: string;
+}
+
+export class UpdateUserPermissionsDto {
+    @ApiProperty({
+        description: 'Permission field names enabled for user',
+        example: ['dashboardAccess', 'memberAccess'],
+        type: [String]
+    })
+    @IsArray()
+    @IsString({ each: true })
+    permissions!: string[];
+}
+
+export class AssignRolesToUserDto {
+    @ApiProperty({
+        description: 'Role IDs to assign to user',
+        example: ['550e8400-e29b-41d4-a716-446655440000'],
+        type: [String]
+    })
+    @IsArray()
+    @IsUUID('4', { each: true })
+    @IsNotEmpty()
+    roleIds!: string[];
 }

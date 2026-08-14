@@ -9,7 +9,6 @@ import * as bcrypt from 'bcryptjs';
 import { AppLogger } from 'libs/common/logger';
 import { AppConfigService } from 'libs/config';
 import { TokenType } from './enums';
-import { RolesService } from '../roles/roles.service';
 import { UsersService } from '../users/users.service';
 import {
   LoginDto,
@@ -26,7 +25,6 @@ export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly usersService: UsersService,
-    private readonly rolesService: RolesService,
     private readonly configService: AppConfigService,
     private readonly logger: AppLogger,
   ) {}
@@ -47,7 +45,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const roles = await this.rolesService.getUserRoles(user.id);
+    const roles = await this.usersService.getUserRoles(user.id);
     const accessTokenPayload = this.createTokenPayload(
       user.id,
       TokenType.AccessToken,
@@ -157,7 +155,7 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    const roles = await this.rolesService.getUserRoles(user.id);
+    const roles = await this.usersService.getUserRoles(user.id);
     const accessTokenPayload = this.createTokenPayload(
       decoded.sub,
       TokenType.AccessToken,

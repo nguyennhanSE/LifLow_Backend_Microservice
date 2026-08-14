@@ -3,7 +3,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { LoggerModule } from 'libs/common/logger';
 import { AppConfigModule, jwtConfig } from 'libs/config';
 import { PrismaModule } from '../prisma/prisma.module';
-import { RolesModule } from '../roles/roles.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -16,7 +15,6 @@ import { AuthRepository } from './repositories/auth.repository';
     JwtModule.register({}),
     PrismaModule,
     UsersModule,
-    RolesModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AuthRepository],

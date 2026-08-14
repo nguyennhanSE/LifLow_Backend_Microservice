@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  AssignRolesToUserDto,
   CreateRoleDto,
   RoleQueryDto,
   UpdateRoleDto,
@@ -21,23 +20,6 @@ interface UpdateRolePayload {
 interface DeleteRolePayload {
   id: string;
   force?: boolean;
-}
-
-interface AssignRoleToUsersPayload {
-  id: string;
-  assignDto: AssignRolesToUserDto;
-}
-
-interface RevokeRoleFromUserPayload {
-  roleId: string;
-  userId: string;
-}
-
-interface GetUsersByRolePayload {
-  roleId: string;
-  page?: number;
-  limit?: number;
-  search?: string;
 }
 
 @Injectable()
@@ -94,35 +76,4 @@ export class IdentityRoleClient {
     );
   }
 
-  assignRoleToUsers(
-    id: string,
-    assignDto: AssignRolesToUserDto,
-    metadata?: IdentityRequestMetadata,
-  ) {
-    return this.identityClientService.send<AssignRoleToUsersPayload>(
-      IDENTITY_ROLE_PATTERNS.assignRoleToUsers,
-      { data: { id, assignDto }, metadata },
-    );
-  }
-
-  revokeRoleFromUser(
-    roleId: string,
-    userId: string,
-    metadata?: IdentityRequestMetadata,
-  ) {
-    return this.identityClientService.send<RevokeRoleFromUserPayload>(
-      IDENTITY_ROLE_PATTERNS.revokeRoleFromUser,
-      { data: { roleId, userId }, metadata },
-    );
-  }
-
-  getUsersByRole(
-    query: GetUsersByRolePayload,
-    metadata?: IdentityRequestMetadata,
-  ) {
-    return this.identityClientService.send<GetUsersByRolePayload>(
-      IDENTITY_ROLE_PATTERNS.getUsersByRole,
-      { data: query, metadata },
-    );
-  }
 }

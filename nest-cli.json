@@ -79,6 +79,7 @@
       "entryFile": "main",
       "sourceRoot": "apps/identity-service/src",
       "compilerOptions": {
+        "webpack": false,
         "tsConfigPath": "apps/identity-service/tsconfig.app.json"
       }
     },

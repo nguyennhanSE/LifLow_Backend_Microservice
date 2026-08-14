@@ -7,7 +7,6 @@ import {
 import type { IPaginateNoCount } from 'libs/common/pagination/pagination.model';
 import type { Prisma } from 'libs/prisma/generated/identity-service/client';
 import {
-  AssignRolesToUserDto,
   CreateRoleDto,
   RoleQueryDto,
   UpdateRoleDto,
@@ -26,21 +25,10 @@ interface RoleListItem {
   updatedAt?: Date | null;
 }
 
-interface RoleUserListItem {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  phoneNumber?: string | null;
-  assignedAt: Date;
-}
-
 @Injectable()
 export class RolesService {
   constructor(private readonly roleRepository: RoleRepository) {}
 
-  getUserRoles(userId: string): Promise<string[]> {
-    return this.roleRepository.findRoleNamesByUserId(userId);
-  }
   async create(createRoleDto: CreateRoleDto) {
     const name = this.normalizeRoleName(createRoleDto.name);
     const existingRole = await this.roleRepository.findByName(name);
@@ -167,105 +155,6 @@ export class RolesService {
     }
 
     return this.roleRepository.delete(id);
-  }
-
-  async assignRoleToUsers(roleId: string, assignDto: AssignRolesToUserDto) {
-    const role = await this.roleRepository.findById(roleId);
-    if (!role) {
-      throw new NotFoundException(`Role with ID '${roleId}' not found`);
-    }
-
-    const users = await this.roleRepository.findUsersByIds(assignDto.userIds);
-    if (users.length !== assignDto.userIds.length) {
-      const foundIds = users.map((user) => user.id);
-      const missingIds = assignDto.userIds.filter(
-        (userId) => !foundIds.includes(userId),
-      );
-
-      throw new NotFoundException(`Users not found: ${missingIds.join(', ')}`);
-    }
-
-    const result = await this.roleRepository.assignRoleToUsers(
-      roleId,
-      assignDto.userIds,
-    );
-
-    return {
-      roleId,
-      roleName: role.name,
-      assignedUsers: result.count,
-      skippedUsers: assignDto.userIds.length - result.count,
-      details: assignDto.userIds.map((userId) => ({
-        userId,
-        status: 'assigned',
-        assignedAt: new Date(),
-      })),
-    };
-  }
-
-  async revokeRoleFromUser(roleId: string, userId: string) {
-    const role = await this.roleRepository.findById(roleId);
-    if (!role) {
-      throw new NotFoundException(`Role with ID '${roleId}' not found`);
-    }
-
-    const user = await this.roleRepository.findUserById(userId);
-    if (!user) {
-      throw new NotFoundException(`User with ID '${userId}' not found`);
-    }
-
-    const userRole = await this.roleRepository.findUserRole(roleId, userId);
-    if (!userRole) {
-      throw new NotFoundException('User does not have this role');
-    }
-
-    if (Object.values(ERoleName).includes(role.name as ERoleName)) {
-      const adminCount = await this.roleRepository.countUsersByRole(roleId);
-      if (adminCount <= 1) {
-        throw new BadRequestException(
-          'Cannot remove the last ADMIN role from the system',
-        );
-      }
-    }
-
-    await this.roleRepository.revokeRoleFromUser(roleId, userId);
-
-    return {
-      userId,
-      roleId,
-      roleName: role.name,
-      revokedAt: new Date(),
-    };
-  }
-
-  async getUsersByRole(
-    roleId: string,
-    page = 1,
-    limit = 20,
-    search?: string,
-  ): Promise<IPaginateNoCount<RoleUserListItem>> {
-    const role = await this.roleRepository.findById(roleId);
-    if (!role) {
-      throw new NotFoundException(`Role with ID '${roleId}' not found`);
-    }
-
-    const skip = (page - 1) * limit;
-    const userRoles = await this.roleRepository.getUsersByRole(
-      roleId,
-      skip,
-      limit + 1,
-      search,
-    );
-    const hasNext = userRoles.length > limit;
-    const docs = userRoles.slice(0, limit).map((userRole) => ({
-      id: userRole.user.id,
-      name: userRole.user.name,
-      email: userRole.user.email,
-      phoneNumber: userRole.user.phoneNumber,
-      assignedAt: userRole.createdAt,
-    }));
-
-    return this.toPaginateNoCount(docs, page, limit, hasNext);
   }
 
   private normalizeRoleName(name: string): string {
