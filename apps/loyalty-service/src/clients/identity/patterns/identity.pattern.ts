@@ -1,0 +1,1 @@
+const IDENTITY_SERVICE_PATTERN = {}

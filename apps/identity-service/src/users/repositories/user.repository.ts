@@ -359,6 +359,31 @@ export class UserRepository {
     });
   }
 
+  updateMembershipSnapshot(
+    userId: string,
+    data: {
+      membershipLevel?: string | null;
+      totalPurchaseAmount?: number | null;
+    },
+  ): Promise<User> {
+    const updateData: Prisma.UserUpdateInput = {
+      updatedAt: new Date(),
+    };
+
+    if (data.membershipLevel !== undefined) {
+      updateData.membershipLevel = data.membershipLevel;
+    }
+
+    if (data.totalPurchaseAmount !== undefined) {
+      updateData.totalPurchaseAmount = data.totalPurchaseAmount;
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+  }
+
   private buildUserWhere(
     filter: UserListFilter,
     excludeUserRole: boolean,
