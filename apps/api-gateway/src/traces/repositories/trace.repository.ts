@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TraceStatus } from '../enums/trace-status.enum';
 
 export interface CreateTraceInput {
   method: string;
@@ -13,7 +14,7 @@ export interface CreateTraceInput {
 export interface UpdateTraceStatusInput {
   traceId: string;
   endedAt: Date;
-  status: string;
+  status: TraceStatus;
 }
 
 @Injectable()
@@ -31,7 +32,7 @@ export class TraceRepository {
           userAgent: input.userAgent,
           startedAt: input.startedAt,
           endedAt: input.startedAt,
-          status: 'pending',
+          status: TraceStatus.PENDING,
         },
       });
       const traceId = `trace-${trace.sequence}`;

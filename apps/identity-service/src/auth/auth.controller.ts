@@ -19,7 +19,6 @@ export class AuthController {
   login(@Payload() payload: IdentityRequestPayload<LoginDto>) {
     return this.authService.login({
       ...payload.data,
-      ip: payload.data.ip ?? payload.metadata?.ip ?? undefined,
     });
   }
 
@@ -34,7 +33,6 @@ export class AuthController {
   ) {
     return this.authService.refreshToken({
       ...payload.data,
-      ip: payload.data.ip ?? payload.metadata?.ip ?? undefined,
     });
   }
 

@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum TraceStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
 model Trace {
     id String @id @unique @default(uuid())
     sequence Int @unique @default(autoincrement()) @map("sequence")
@@ -17,7 +23,6 @@ model Trace {
     userAgent String @map("user_agent")
     startedAt DateTime @map("started_at")
     endedAt DateTime @map("ended_at")
-    status String @default("pending") @map("status")
-    
+    status TraceStatus @default(PENDING) @map("status")
     @@index([traceId])
 }

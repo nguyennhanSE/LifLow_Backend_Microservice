@@ -7,6 +7,7 @@ import {
 import type { Request, Response } from 'express';
 import { catchError, finalize, Observable, throwError } from 'rxjs';
 import type { RequestMetadata } from '../clients/metadata/client.metadata';
+import { TraceStatus } from '../traces/enums/trace-status.enum';
 import { TraceService } from '../traces/trace.service';
 
 @Injectable()
@@ -21,50 +22,38 @@ export class RequestInterceptor implements NestInterceptor {
     const request = httpContext.getRequest<Request>();
     const response = httpContext.getResponse<Response>();
     const startedAt = new Date();
-    const requestId = this.buildRequestId(request);
-    const ip = this.getClientIp(request);
+    const requestIp = this.getClientIp(request);
     const userAgent = this.getHeader(request.headers['user-agent']) ?? null;
     const traceId = await this.traceService.startTrace({
       method: request.method,
       path: request.originalUrl ?? request.url,
-      ip: ip ?? '',
+      ip: requestIp ?? '',
       userAgent: userAgent ?? '',
       startedAt,
     });
     const metadata: RequestMetadata = {
-      ip,
-      userAgent,
-      requestId,
       traceId,
+      requestIp,
     };
 
     request.metadata = metadata;
-    response.setHeader('x-request-id', metadata.requestId);
-    response.setHeader('x-trace-id', metadata.traceId);
+    response.setHeader('x-trace-id', traceId);
 
-    let status = 'success';
+    let status = TraceStatus.COMPLETED;
 
     return next.handle().pipe(
       catchError((error: unknown) => {
-        status = 'failed';
+        status = TraceStatus.FAILED;
 
         return throwError(() => error);
       }),
       finalize(() => {
         void this.traceService.finishTrace({
-          traceId: metadata.traceId,
+          traceId,
           endedAt: new Date(),
-          status: status === 'failed' ? 'failed' : String(response.statusCode),
+          status,
         });
       }),
-    );
-  }
-
-  private buildRequestId(request: Request): string {
-    return (
-      this.getHeader(request.headers['x-request-id']) ??
-      this.getHeader(request.headers['request-id']) ??
-      ''
     );
   }
 

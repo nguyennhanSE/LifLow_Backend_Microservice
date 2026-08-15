@@ -7,6 +7,7 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
+    process.env.DATABASE_URL ??= process.env.IDENTITY_SERVICE_DATABASE_URL;
     super({} as ConstructorParameters<typeof PrismaClient>[0]);
   }
 

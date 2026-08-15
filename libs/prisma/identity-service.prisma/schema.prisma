@@ -13,47 +13,49 @@ datasource db {
 }
 
 model User {
-  id String @id @unique // ID is unique and also serves as username
-  password String? @map("password")
-  name String?
-  membershipLevel String? @map("membership_level")
-  age Int? @map("age")
-  email String?
-  phoneNumber String? @map("phone_number")
-  totalUsedPoints Int? @default(0) @map("total_used_points")
-  availablePoints Int? @default(0) @map("available_points")
-  registrationDate String? @map("registration_date") // Join Date
-  dormancyDate String? @map("dormancy_date") // Date account marked inactive
-  withdrawalDate String? @map("withdrawal_date")
-  withdrawalType String? @map("withdrawal_type")
+  id                  String  @id @unique // ID is unique and also serves as username
+  password            String? @map("password")
+  name                String?
+  membershipLevel     String? @map("membership_level")
+  age                 Int?    @map("age")
+  email               String?
+  phoneNumber         String? @map("phone_number")
+  totalUsedPoints     Int?    @default(0) @map("total_used_points")
+  availablePoints     Int?    @default(0) @map("available_points")
+  registrationDate    String? @map("registration_date") // Join Date
+  dormancyDate        String? @map("dormancy_date") // Date account marked inactive
+  withdrawalDate      String? @map("withdrawal_date")
+  withdrawalType      String? @map("withdrawal_type")
   reasonForWithdrawal String? @map("reason_for_withdrawal")
 
-  avatarURL String? @map("avatar_url")
+  avatarURL String?   @map("avatar_url")
   createdAt DateTime? @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
   // Payment Information
-  totalPurchaseAmount Int? @default(0) @map("total_purchase_amount")
+  totalPurchaseAmount Int?     @default(0) @map("total_purchase_amount")
   // Permissions
-  dashboardAccess Boolean? @default(false) @map("dashboard_access")
-  memberAccess Boolean? @default(false) @map("member_access")
-  productAccess Boolean? @default(false) @map("product_access")
-  orderAccess Boolean? @default(false) @map("order_access")
-  recipeAccess Boolean? @default(false) @map("recipe_access")
-  bannerAccess Boolean? @default(false) @map("banner_access")
-  
+  dashboardAccess     Boolean? @default(false) @map("dashboard_access")
+  memberAccess        Boolean? @default(false) @map("member_access")
+  productAccess       Boolean? @default(false) @map("product_access")
+  orderAccess         Boolean? @default(false) @map("order_access")
+  recipeAccess        Boolean? @default(false) @map("recipe_access")
+  bannerAccess        Boolean? @default(false) @map("banner_access")
+
   // Extension
-  mobilePhoneNumber String? @map("mobile_phone_number")
-  nickName String? @map("nick_name")
-  statusMessage String? @map("status_message")
+  mobilePhoneNumber String?    @map("mobile_phone_number")
+  nickName          String?    @map("nick_name")
+  statusMessage     String?    @map("status_message")
   // Relations
-  userRole UserRole[]
-  session Session[]
+  userRole          UserRole[]
+  session           Session[]
+
   @@index([membershipLevel])
   @@index([name(ops: raw("gin_trgm_ops"))], type: Gin)
   @@index([email(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("users")
 }
+
 enum ERoleName {
   ADMIN
   GENERAL_MANAGER
@@ -62,6 +64,7 @@ enum ERoleName {
   CS_MANAGER
   USER
 }
+
 model Role {
   id          String  @id @default(uuid())
   name        String  @unique
@@ -83,7 +86,7 @@ model UserRole {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 
   @@id([userId, roleId])
@@ -97,9 +100,9 @@ model Session {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  refreshToken     String             @unique
-  ip               String?
-  expiredAt        DateTime
+  refreshToken String   @unique
+  ip           String?
+  expiredAt    DateTime
 
   refreshTokenUsed RefreshTokenUsed[]
 
@@ -115,4 +118,57 @@ model RefreshTokenUsed {
 
   @@index([sessionId])
   @@map("refresh_token_used")
+}
+
+enum RequestStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model RequestLog {
+  id       String @id @default(uuid())
+  sequence Int    @unique @default(autoincrement())
+
+  // Trace / message context
+  traceId         String?        @map("trace_id")
+  requestId       String?        @unique @map("request_id")
+  parentRequestId String?        @map("parent_request_id")
+  correlationId   String?        @map("correlation_id")
+  causationId     String?        @map("causation_id")
+  requestPattern  String?        @map("request_pattern")
+  requestStatus   RequestStatus? @default(PENDING) @map("request_status")
+
+  // Service / source context
+  serviceName     String? @map("service_name")
+  serviceIp       String? @map("service_ip")
+  serviceMetadata Json?   @map("service_metadata")
+
+  // Actor
+  userId      String? @map("user_id")
+  anonymousId String? @map("anonymous_id")
+  sessionId   String? @map("session_id")
+  actorType   String? @map("actor_type") // user, admin, system, service
+
+  // Entity
+  entityType String? @map("entity_type")
+  entityId   String? @map("entity_id")
+
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  lokiPushedAt   DateTime? @map("loki_pushed_at")
+  lokiPushError  String?   @map("loki_push_error")
+  lokiRetryCount Int       @default(0) @map("loki_retry_count")
+
+  @@index([userId, occurredAt])
+  @@index([entityType, entityId, occurredAt])
+  @@index([traceId, occurredAt])
+  @@index([requestId])
+  @@index([parentRequestId])
+  @@index([correlationId, occurredAt])
+  @@index([requestPattern, occurredAt])
+  @@index([requestStatus, occurredAt])
+  @@index([lokiPushedAt])
+  @@map("request_logs")
 }

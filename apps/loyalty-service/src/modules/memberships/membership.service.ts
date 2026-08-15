@@ -110,6 +110,7 @@ export class MembershipService {
     await this.findOne(id);
     const membership = await this.membershipRepository.deleteMembership(id);
 
+    this.emitMembershipDeleted(membership, metadata);
     return {
       message: `Membership with id "${id}" deleted successfully`,
       membership,
