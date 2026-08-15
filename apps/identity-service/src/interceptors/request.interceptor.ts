@@ -18,8 +18,8 @@ import type {
   IdentityRequestMetadata,
   IdentityRequestPayload,
 } from '../common';
-import { LokiService } from '../loki/loki.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { IdentityQueueService } from '../queue/identity-queue.service';
 
 const SERVICE_NAME = 'identity-service';
 
@@ -53,7 +53,7 @@ export class RequestInterceptor implements NestInterceptor {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly lokiService: LokiService,
+    private readonly identityQueueService: IdentityQueueService,
   ) {}
 
   async intercept(
@@ -165,13 +165,9 @@ export class RequestInterceptor implements NestInterceptor {
         where: { id: requestLog.id },
         data: { requestStatus: status },
       });
-      await this.lokiService.push(this.toLokiLogData(requestLog, status));
-      await this.prisma.requestLog.update({
-        where: { id: requestLog.id },
-        data: {
-          lokiPushedAt: new Date(),
-          lokiPushError: null,
-        },
+      await this.identityQueueService.enqueueRequestUpdate({
+        requestLogId: requestLog.id,
+        log: this.toLokiLogData(requestLog, status),
       });
     } catch (error) {
       await this.prisma.requestLog

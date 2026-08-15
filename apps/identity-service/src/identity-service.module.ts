@@ -7,8 +7,8 @@ import { identityServiceConfig } from './config/identity-service.config';
 import { IdentityServiceController } from './identity-service.controller';
 import { IdentityServiceService } from './identity-service.service';
 import { RequestInterceptor } from './interceptors/request.interceptor';
-import { LokiModule } from './loki/loki.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { IdentityQueueModule } from './queue/identity-queue.module';
 import { RolesModule } from './roles/roles.module';
 
 @Module({
@@ -16,7 +16,7 @@ import { RolesModule } from './roles/roles.module';
     CommonModule,
     AppConfigModule.forFeature([identityServiceConfig, jwtConfig]),
     PrismaModule,
-    LokiModule,
+    IdentityQueueModule,
     AuthModule,
     RolesModule,
   ],
