@@ -5,7 +5,7 @@ import type {
   User,
   UserRole,
 } from 'libs/prisma/generated/identity-service/client';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { ERoleName } from '../../roles/enums/role.enum';
 
 export type UserWithRoles = Prisma.UserGetPayload<{

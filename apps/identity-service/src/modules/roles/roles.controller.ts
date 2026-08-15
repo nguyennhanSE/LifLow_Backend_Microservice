@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import type { IPaginateNoCount } from 'libs/common/pagination/pagination.model';
-import type { IdentityRequestPayload } from '../common';
+import type { IdentityRequestPayload } from '../../common';
 import {
   CreateRoleDto,
   DeleteRolePayload,
@@ -52,5 +52,4 @@ export class RolesController {
   deleteRole(@Payload() payload: IdentityRequestPayload<DeleteRolePayload>) {
     return this.rolesService.remove(payload.data.id, payload.data.force);
   }
-
 }

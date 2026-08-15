@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { AppLogger } from 'libs/common/logger';
-import { LokiService } from '../loki/loki.service';
+import { LokiService } from '../../../../libs/observability/loki/loki.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   IDENTITY_QUEUE_NAME,

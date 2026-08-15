@@ -3,7 +3,7 @@ import { JwtService, JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import { AppLogger } from 'libs/common/logger';
 import type { Session } from 'libs/prisma/generated/identity-service/client';
 import { RefreshTokenDto, TokenPayload } from '../dtos/auth.dto';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class AuthRepository {
@@ -22,10 +22,7 @@ export class AuthRepository {
     return this.jwtService.signAsync(payload, options);
   }
 
-  decodeToken(
-    token: string,
-    options: JwtVerifyOptions,
-  ): Promise<TokenPayload> {
+  decodeToken(token: string, options: JwtVerifyOptions): Promise<TokenPayload> {
     return this.jwtService.verifyAsync<TokenPayload>(token, options);
   }
 

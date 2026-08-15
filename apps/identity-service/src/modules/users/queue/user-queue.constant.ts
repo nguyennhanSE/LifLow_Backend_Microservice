@@ -1,4 +1,4 @@
-import type { IdentityRequestMetadata } from '../../common';
+import type { IdentityRequestMetadata } from '../../../common';
 
 export const USER_QUEUE_NAME = 'user-queue';
 

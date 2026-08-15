@@ -3,7 +3,7 @@ import type {
   Prisma,
   Role,
 } from 'libs/prisma/generated/identity-service/client';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 type RoleWithUserCount = Prisma.RoleGetPayload<{
   include: {
@@ -97,5 +97,4 @@ export class RoleRepository {
   delete(id: string): Promise<Role> {
     return this.prisma.role.delete({ where: { id } });
   }
-
 }

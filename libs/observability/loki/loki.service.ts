@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppLogger } from 'libs/common/logger';
 import { AppConfigService } from 'libs/config';
-import type { LokiLogData } from 'libs/observability/types/loki.type';
+import type { LokiLogData } from 'libs/observability/loki/types/loki.type';
 
 @Injectable()
 export class LokiService {

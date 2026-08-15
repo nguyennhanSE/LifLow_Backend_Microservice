@@ -7,11 +7,7 @@ import { AppConfigService } from './config.service';
 import { validateEnv } from './env.validation';
 import {
   appConfig,
-  objectStorageConfig,
-  observabilityConfig,
-  paymentConfig,
   rabbitmqConfig,
-  redisConfig,
 } from './namespaces';
 
 const getEnvFilePaths = (): string[] => {
@@ -35,11 +31,7 @@ export class AppConfigModule {
           envFilePath: getEnvFilePaths(),
           load: [
             appConfig,
-            objectStorageConfig,
-            observabilityConfig,
-            paymentConfig,
             rabbitmqConfig,
-            redisConfig,
             ...featureConfigs,
           ],
           validate: validateEnv,

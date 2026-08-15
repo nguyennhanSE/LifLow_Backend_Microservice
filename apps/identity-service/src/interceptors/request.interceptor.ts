@@ -10,7 +10,7 @@ import {
   Prisma,
   RequestStatus,
 } from 'libs/prisma/generated/identity-service/client';
-import type { LokiLogData } from 'libs/observability/types/loki.type';
+import type { LokiLogData } from 'libs/observability/loki/types/loki.type';
 import { catchError, finalize, Observable, throwError } from 'rxjs';
 import { randomUUID } from 'node:crypto';
 import { networkInterfaces } from 'node:os';

@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
-import type { IdentityRequestPayload } from '../common';
+import type { IdentityRequestPayload } from '../../common';
 import {
   AssignRolesToUserPayload,
   CreateUserDto,

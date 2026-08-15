@@ -1,4 +1,4 @@
-import type { LokiLogData } from 'libs/observability/types/loki.type';
+import type { LokiLogData } from 'libs/observability/loki/types/loki.type';
 
 export const IDENTITY_QUEUE_NAME = 'identity-service-queue';
 
