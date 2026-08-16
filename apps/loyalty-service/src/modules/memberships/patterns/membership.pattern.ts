@@ -6,4 +6,11 @@ export const MEMBERSHIP_PATTERNS = {
   deleteMembership: 'membership.delete',
   bulkUpdateMemberships: 'membership.bulk-update',
   membershipUpdated: 'membership.updated',
+  assignMembershipToUser: 'membership.assign-to-user',
+  getMembershipUsers: 'membership.get-users',
+  getUserMemberships: 'membership.get-user-memberships',
+  getUserActiveMembership: 'membership.get-user-active',
+  updateUserMembership: 'membership.update-user-membership',
+  removeUserMembership: 'membership.remove-user-membership',
+  recalculateAllMemberships: 'membership.recalculate-all',
 } as const;

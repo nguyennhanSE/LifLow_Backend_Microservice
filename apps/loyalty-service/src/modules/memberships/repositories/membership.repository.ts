@@ -2,8 +2,14 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from 'libs/prisma/generated/loyalty-service/client';
 import type { IPaginate } from 'libs/common/pagination/pagination.model';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { MembershipEntity } from '../entities/membership.entity';
-import { toMembershipEntity } from '../mapping/membership.mapping';
+import {
+  MembershipEntity,
+  UserMembershipEntity,
+} from '../entities/membership.entity';
+import {
+  toMembershipEntity,
+  toUserMembershipEntity,
+} from '../mapping/membership.mapping';
 
 export interface MembershipPaginateOptions {
   page?: number;
@@ -18,6 +24,17 @@ export interface MembershipPaginateOptions {
 export interface MembershipPriceSnapshot {
   membershipName: string;
   membershipMinPrice: number;
+}
+
+export interface UserMembershipPaginateOptions {
+  page?: number;
+  limit?: number;
+  sort?: 'asc' | 'desc';
+  sortBy?: string;
+  counted?: boolean;
+  userId?: string;
+  membershipId?: string;
+  status?: string;
 }
 
 @Injectable()
@@ -121,6 +138,124 @@ export class MembershipRepository {
     }));
   }
 
+  async createUserMembership(
+    data: Prisma.UserMembershipUncheckedCreateInput,
+  ): Promise<UserMembershipEntity> {
+    const userMembership = await this.prisma.userMembership.create({
+      data,
+      include: { membership: true },
+    });
+
+    return toUserMembershipEntity(userMembership);
+  }
+
+  async getUserMembershipByUserId(
+    userId: string,
+  ): Promise<UserMembershipEntity | null> {
+    const userMembership = await this.prisma.userMembership.findFirst({
+      where: { userId },
+      include: { membership: true },
+    });
+
+    return userMembership ? toUserMembershipEntity(userMembership) : null;
+  }
+
+  async getUserMembershipByUserAndMembership(
+    userId: string,
+    membershipId: string,
+  ): Promise<UserMembershipEntity | null> {
+    const userMembership = await this.prisma.userMembership.findFirst({
+      where: { userId, membershipId },
+      include: { membership: true },
+    });
+
+    return userMembership ? toUserMembershipEntity(userMembership) : null;
+  }
+
+  async getActiveUserMembership(
+    userId: string,
+    now = new Date(),
+  ): Promise<UserMembershipEntity | null> {
+    const userMembership = await this.prisma.userMembership.findFirst({
+      where: {
+        userId,
+        status: 'normal',
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      include: { membership: true },
+      orderBy: { endDate: 'desc' },
+    });
+
+    return userMembership ? toUserMembershipEntity(userMembership) : null;
+  }
+
+  async getUserMembershipsPaginated(
+    options: UserMembershipPaginateOptions,
+  ): Promise<IPaginate<UserMembershipEntity>> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? 10;
+    const sort = options.sort ?? 'desc';
+    const sortBy = this.getUserMembershipSortField(options.sortBy);
+    const counted = options.counted ?? true;
+    const skip = (page - 1) * limit;
+    const where = this.buildUserMembershipWhere(options);
+    const orderBy: Prisma.UserMembershipOrderByWithRelationInput = {
+      [sortBy]: sort,
+    };
+
+    const [docs, totalDocs] = await Promise.all([
+      this.prisma.userMembership.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: { membership: true },
+      }),
+      counted
+        ? this.prisma.userMembership.count({ where })
+        : Promise.resolve(0),
+    ]);
+
+    return this.toPaginate(
+      docs.map(toUserMembershipEntity),
+      page,
+      limit,
+      counted ? totalDocs : undefined,
+    );
+  }
+
+  async updateUserMembership(
+    userId: string,
+    data: Prisma.UserMembershipUncheckedUpdateInput,
+  ): Promise<UserMembershipEntity> {
+    const existing = await this.prisma.userMembership.findFirst({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new Error(`User membership for user "${userId}" not found`);
+    }
+
+    const userMembership = await this.prisma.userMembership.update({
+      where: { id: existing.id },
+      data,
+      include: { membership: true },
+    });
+
+    return toUserMembershipEntity(userMembership);
+  }
+
+  async deleteUserMembership(id: string): Promise<UserMembershipEntity> {
+    const userMembership = await this.prisma.userMembership.delete({
+      where: { id },
+      include: { membership: true },
+    });
+
+    return toUserMembershipEntity(userMembership);
+  }
+
   private buildMembershipWhere(
     options: MembershipPaginateOptions,
   ): Prisma.MembershipWhereInput {
@@ -151,12 +286,42 @@ export class MembershipRepository {
     return 'name';
   }
 
-  private toPaginate(
-    docs: MembershipEntity[],
+  private buildUserMembershipWhere(
+    options: UserMembershipPaginateOptions,
+  ): Prisma.UserMembershipWhereInput {
+    const where: Prisma.UserMembershipWhereInput = {};
+
+    if (options.userId) {
+      where.userId = options.userId;
+    }
+
+    if (options.membershipId) {
+      where.membershipId = options.membershipId;
+    }
+
+    if (options.status) {
+      where.status = options.status;
+    }
+
+    return where;
+  }
+
+  private getUserMembershipSortField(
+    sortBy: string | undefined,
+  ): 'createdAt' | 'startDate' | 'endDate' | 'status' {
+    if (sortBy === 'startDate' || sortBy === 'endDate' || sortBy === 'status') {
+      return sortBy;
+    }
+
+    return 'createdAt';
+  }
+
+  private toPaginate<TDoc>(
+    docs: TDoc[],
     currentPage: number,
     limit: number,
     totalDocs?: number,
-  ): IPaginate<MembershipEntity> {
+  ): IPaginate<TDoc> {
     if (totalDocs !== undefined) {
       const totalPages = Math.ceil(totalDocs / limit);
       const hasNext = currentPage < totalPages;

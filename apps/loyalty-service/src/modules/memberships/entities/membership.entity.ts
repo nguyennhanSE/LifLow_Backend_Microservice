@@ -10,6 +10,7 @@ export class MembershipEntity {
 }
 
 export class UserMembershipEntity {
+  id!: string;
   userId!: string;
   membershipId!: string;
   membershipName!: string;
@@ -17,14 +18,15 @@ export class UserMembershipEntity {
   status!: string;
   startDate!: Date;
   endDate!: Date;
+  updatedByAdmin!: boolean;
   createdAt!: Date;
   updatedAt?: Date | null;
-  
+
   // Relations
   membership?: MembershipEntity;
   user?: {
     id: string;
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
   };
 }
