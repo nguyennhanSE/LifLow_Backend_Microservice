@@ -1,11 +1,15 @@
+import { INestApplication } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppConfigService } from 'libs/config';
 import { IdentityServiceModule } from './identity-service.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(IdentityServiceModule);
   const configService = app.get(AppConfigService);
+
+  configureSwagger(app);
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
@@ -28,5 +32,21 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
   await app.listen(configService.get<number>('identityService.port', 3501));
+}
+
+function configureSwagger(app: INestApplication) {
+  const config = new DocumentBuilder()
+    .setTitle('Liflow Identity Service')
+    .setDescription('HTTP API documentation for Liflow Identity Service')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 }
 bootstrap();

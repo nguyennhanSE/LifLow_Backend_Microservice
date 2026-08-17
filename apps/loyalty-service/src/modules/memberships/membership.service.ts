@@ -635,8 +635,13 @@ export class MembershipService {
     userMembership: UserMembershipEntity,
   ): string | null {
     const now = new Date();
+    const userMembershipStatus = Object.values(EMembershipStatus).includes(
+      userMembership.status as EMembershipStatus,
+    )
+      ? (userMembership.status as EMembershipStatus)
+      : undefined;
     const isActive =
-      userMembership.status === EMembershipStatus.NORMAL &&
+      userMembershipStatus === EMembershipStatus.NORMAL &&
       userMembership.startDate <= now &&
       userMembership.endDate >= now;
 

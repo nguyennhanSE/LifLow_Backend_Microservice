@@ -1,5 +1,6 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import { AppConfigService } from 'libs/config';
 import { ApiGatewayModule } from './api-gateway.module';
@@ -25,23 +26,45 @@ interface SecurityHeadersConfig {
 }
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const SWAGGER_PATH = 'docs';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
+    app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   const configService = app.get(AppConfigService);
 
   configureCors(app, configService);
   configureSecurityHeaders(app, configService);
   configureRateLimit(app, configService);
+  configureSwagger(app);
 
   const port = configService.get<number>('apiGateway.port', 3500);
   await app.listen(port);
 }
 
-function configureCors(
-  app: INestApplication,
-  configService: AppConfigService,
-) {
+function configureSwagger(app: INestApplication) {
+  const config = new DocumentBuilder()
+    .setTitle('Liflow API Gateway')
+    .setDescription('HTTP API documentation for Liflow API Gateway')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup(SWAGGER_PATH, app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+}
+
+function configureCors(app: INestApplication, configService: AppConfigService) {
   const corsConfig = configService.get<CorsConfig>('apiGateway.cors');
   if (!corsConfig?.enabled) {
     return;
@@ -83,10 +106,13 @@ function configureSecurityHeaders(
       'Permissions-Policy',
       'camera=(), microphone=(), geolocation=()',
     );
-    response.setHeader(
-      'Content-Security-Policy',
-      securityHeadersConfig.contentSecurityPolicy,
-    );
+
+    if (!_request.path.startsWith(`/${SWAGGER_PATH}`)) {
+      response.setHeader(
+        'Content-Security-Policy',
+        securityHeadersConfig.contentSecurityPolicy,
+      );
+    }
 
     if (securityHeadersConfig.hstsEnabled) {
       response.setHeader(
@@ -103,8 +129,9 @@ function configureRateLimit(
   app: INestApplication,
   configService: AppConfigService,
 ) {
-  const rateLimitConfig =
-    configService.get<RateLimitConfig>('apiGateway.rateLimit');
+  const rateLimitConfig = configService.get<RateLimitConfig>(
+    'apiGateway.rateLimit',
+  );
   if (!rateLimitConfig?.enabled) {
     return;
   }

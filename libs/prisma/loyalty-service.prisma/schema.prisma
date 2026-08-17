@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/loyalty-service"
+  provider     = "prisma-client"
+  output       = "../generated/loyalty-service"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -8,44 +9,44 @@ datasource db {
 }
 
 model Membership {
-    id String @id @default(uuid())
-    name String? @unique
-    nickName String? @map("nick_name")
-    basePeriod Int? @map("base_period")
-    description String?
-    minPrice Int? @map("min_price")
-    userMembership UserMembership[]
-    createdAt DateTime? @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
+  id             String           @id @default(uuid())
+  name           String?          @unique
+  nickName       String?          @map("nick_name")
+  basePeriod     Int?             @map("base_period")
+  description    String?
+  minPrice       Int?             @map("min_price")
+  userMembership UserMembership[]
+  createdAt      DateTime?        @default(now()) @map("created_at")
+  updatedAt      DateTime?        @updatedAt @map("updated_at")
 
-    @@map("memberships")
-    @@index([name])
-    @@index([minPrice])
+  @@index([name])
+  @@index([minPrice])
+  @@map("memberships")
 }
 
 model UserMembership {
-    id String @id @default(uuid())
+  id String @id @default(uuid())
 
-    userId String @unique @map("user_id")
-    membershipId String @map("membership_id")
+  userId       String @unique @map("user_id")
+  membershipId String @map("membership_id")
 
-    membershipName String @map("membership_name")
-    membershipDescription String @map("membership_description")
-    status String @default("normal")
+  membershipName        String @map("membership_name")
+  membershipDescription String @map("membership_description")
+  status                String @default("normal")
 
-    startDate DateTime @map("start_date")
-    endDate DateTime @map("end_date")
-    updatedByAdmin Boolean @default(false) @map("updated_by_admin")
+  startDate      DateTime @map("start_date")
+  endDate        DateTime @map("end_date")
+  updatedByAdmin Boolean  @default(false) @map("updated_by_admin")
 
-    membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
-    @@index([membershipId])
-    @@index([userId])
-    @@index([userId, membershipId])
-    @@map("user_memberships")
+  @@index([membershipId])
+  @@index([userId])
+  @@index([userId, membershipId])
+  @@map("user_memberships")
 }
 
 enum RequestStatus {

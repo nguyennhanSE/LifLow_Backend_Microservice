@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/api-gateway"
+  provider     = "prisma-client"
+  output       = "../generated/api-gateway"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -14,15 +15,16 @@ enum TraceStatus {
 }
 
 model Trace {
-    id String @id @unique @default(uuid())
-    sequence Int @unique @default(autoincrement()) @map("sequence")
-    traceId String @unique @map("trace_id")
-    method String @map("method")
-    path String @map("path")
-    ip String @map("ip")
-    userAgent String @map("user_agent")
-    startedAt DateTime @map("started_at")
-    endedAt DateTime @map("ended_at")
-    status TraceStatus @default(PENDING) @map("status")
-    @@index([traceId])
+  id        String      @id @unique @default(uuid())
+  sequence  Int         @unique @default(autoincrement()) @map("sequence")
+  traceId   String      @unique @map("trace_id")
+  method    String      @map("method")
+  path      String      @map("path")
+  ip        String      @map("ip")
+  userAgent String      @map("user_agent")
+  startedAt DateTime    @map("started_at")
+  endedAt   DateTime    @map("ended_at")
+  status    TraceStatus @default(PENDING) @map("status")
+
+  @@index([traceId])
 }

@@ -39,28 +39,82 @@ services:
   #   #   - /usr/src/app/node_modules
   #   # command: npm run start:dev
 
-  postgres:
-    image: postgres
-    container_name: postgres-microservice
+  api-gateway-postgres:
+    image: postgres:17-alpine
+    container_name: api-gateway-postgres-microservice
     env_file:
-      - .env.prod 
+      - .env.prod
     environment:
       # IMPORTANT:
       # - `${...}` here is resolved by Docker Compose *before* containers start.
-      # - `env_file: .env.dev` does NOT populate those `${...}` values for Compose interpolation.
+      # - `env_file` does NOT populate those `${...}` values for Compose interpolation.
       #   (it only injects env into the container once it starts).
       # So we provide defaults to prevent Postgres from exiting when variables are missing.
-      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-123456}
-      POSTGRES_DB: ${DATABASE_NAME:-postgres}
+      POSTGRES_USER: ${API_GATEWAY_DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${API_GATEWAY_DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${API_GATEWAY_DATABASE_NAME:-postgres}
     volumes:
-      - postgres_data_microservice:/var/lib/postgresql
+      - api_gateway_postgres_data_microservice:/var/lib/postgresql/data
     ports:
-      - "5434:5432"
+      - "${API_GATEWAY_DATABASE_PORT:-5433}:5432"
     networks:
       - liflow-network-microservice
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  identity-postgres:
+    image: postgres:17-alpine
+    container_name: identity-postgres-microservice
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: ${IDENTITY_SERVICE_DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${IDENTITY_SERVICE_DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${IDENTITY_SERVICE_DATABASE_NAME:-postgres}
+    volumes:
+      - identity_postgres_data_microservice:/var/lib/postgresql/data
+    ports:
+      - "${IDENTITY_SERVICE_DATABASE_PORT:-5434}:5432"
+    networks:
+      - liflow-network-microservice
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  loyalty-postgres:
+    image: postgres:17-alpine
+    container_name: loyalty-postgres-microservice
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: ${LOYALTY_SERVICE_DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${LOYALTY_SERVICE_DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${LOYALTY_SERVICE_DATABASE_NAME:-postgres}
+    volumes:
+      - loyalty_postgres_data_microservice:/var/lib/postgresql/data
+    ports:
+      - "${LOYALTY_SERVICE_DATABASE_PORT:-5435}:5432"
+    networks:
+      - liflow-network-microservice
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -170,23 +224,69 @@ services:
     networks:
       - liflow-network-microservice
       
-  backup:
+  backup-api-gateway:
     image: prodrigestivill/postgres-backup-local
-    container_name: backup-microservice
+    container_name: backup-api-gateway-microservice
     env_file:
       - .env.prod
     restart: unless-stopped
     volumes:
-      - backup_data_microservice:/backups
+      - backup_api_gateway_data_microservice:/backups
     environment:
-      # Use Docker service name for postgres connection
-      - POSTGRES_HOST=postgres
-      - POSTGRES_DB=${DATABASE_NAME:-postgres}
+      - POSTGRES_HOST=api-gateway-postgres
+      - POSTGRES_DB=${API_GATEWAY_DATABASE_NAME:-postgres}
       - POSTGRES_USER=${POSTGRES_BACKUP_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_BACKUP_USER_PASSWORD:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_BACKUP_USER_PASSWORD:-123456}
       - SCHEDULE=@daily
       - BACKUP_KEEP_DAYS=7
       - EXTRA_OPTS=--schema=public
+    depends_on:
+      api-gateway-postgres:
+        condition: service_healthy
+    networks:
+      - liflow-network-microservice
+
+  backup-identity:
+    image: prodrigestivill/postgres-backup-local
+    container_name: backup-identity-microservice
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    volumes:
+      - backup_identity_data_microservice:/backups
+    environment:
+      - POSTGRES_HOST=identity-postgres
+      - POSTGRES_DB=${IDENTITY_SERVICE_DATABASE_NAME:-postgres}
+      - POSTGRES_USER=${POSTGRES_BACKUP_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_BACKUP_USER_PASSWORD:-123456}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - EXTRA_OPTS=--schema=public
+    depends_on:
+      identity-postgres:
+        condition: service_healthy
+    networks:
+      - liflow-network-microservice
+
+  backup-loyalty:
+    image: prodrigestivill/postgres-backup-local
+    container_name: backup-loyalty-microservice
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    volumes:
+      - backup_loyalty_data_microservice:/backups
+    environment:
+      - POSTGRES_HOST=loyalty-postgres
+      - POSTGRES_DB=${LOYALTY_SERVICE_DATABASE_NAME:-postgres}
+      - POSTGRES_USER=${POSTGRES_BACKUP_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_BACKUP_USER_PASSWORD:-123456}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - EXTRA_OPTS=--schema=public
+    depends_on:
+      loyalty-postgres:
+        condition: service_healthy
     networks:
       - liflow-network-microservice
   elasticsearch:
@@ -253,12 +353,16 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data_microservice:
+  api_gateway_postgres_data_microservice:
+  identity_postgres_data_microservice:
+  loyalty_postgres_data_microservice:
   redis_data_microservice:
   prometheus_data_microservice:
   grafana_data_microservice:
   redisinsight_data_microservice:
-  backup_data_microservice:
+  backup_api_gateway_data_microservice:
+  backup_identity_data_microservice:
+  backup_loyalty_data_microservice:
   elasticsearch_data_microservice:
   kibana_data_microservice:
   loki_data_microservice:

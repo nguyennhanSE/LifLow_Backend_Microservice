@@ -5,20 +5,19 @@ import {
 } from '@nestjs/config';
 import { AppConfigService } from './config.service';
 import { validateEnv } from './env.validation';
-import {
-  appConfig,
-  rabbitmqConfig,
-} from './namespaces';
+import { appConfig, rabbitmqConfig } from './namespaces';
 
 const getEnvFilePaths = (): string[] => {
   const nodeEnv = process.env.NODE_ENV;
 
-  return [
-    nodeEnv ? `.env.${nodeEnv}` : '.env.dev',
-  ];
+  return [nodeEnv ? `.env.${nodeEnv}` : '.env.dev'];
 };
 
-@Module({})
+@Module({
+  imports: [NestConfigModule],
+  providers: [AppConfigService],
+  exports: [NestConfigModule, AppConfigService],
+})
 export class AppConfigModule {
   static forRoot(featureConfigs: ConfigFactory[] = []): DynamicModule {
     return {
@@ -29,11 +28,7 @@ export class AppConfigModule {
           cache: true,
           expandVariables: true,
           envFilePath: getEnvFilePaths(),
-          load: [
-            appConfig,
-            rabbitmqConfig,
-            ...featureConfigs,
-          ],
+          load: [appConfig, rabbitmqConfig, ...featureConfigs],
           validate: validateEnv,
         }),
       ],
@@ -45,9 +40,10 @@ export class AppConfigModule {
   static forFeature(featureConfigs: ConfigFactory[]): DynamicModule {
     return {
       module: AppConfigModule,
-      imports: featureConfigs.map((config) =>
-        NestConfigModule.forFeature(config),
-      ),
+      imports: [
+        NestConfigModule,
+        ...featureConfigs.map((config) => NestConfigModule.forFeature(config)),
+      ],
       providers: [AppConfigService],
       exports: [NestConfigModule, AppConfigService],
     };

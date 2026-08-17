@@ -8,13 +8,17 @@ import { RequestInterceptor } from './interceptors/request.interceptor';
 import { LoyaltyServiceController } from './loyalty-service.controller';
 import { LoyaltyServiceService } from './loyalty-service.service';
 import { MembershipModule } from './modules/memberships/membership.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { LoyaltyQueueModule } from './queue/loyalty-queue.module';
+import { IdentityClientModule } from './clients/identity/identity-client.module';
 
 @Module({
   imports: [
-    CommonModule,
     AppConfigModule.forFeature([loyaltyServiceConfig]),
+    IdentityClientModule,
+    CommonModule,
     AppQueueModule.forRoot(),
+    PrismaModule,
     LoyaltyQueueModule,
     MembershipModule,
   ],

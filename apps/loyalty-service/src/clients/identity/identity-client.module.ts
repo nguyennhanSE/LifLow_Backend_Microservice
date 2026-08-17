@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { AppConfigModule, AppConfigService } from 'libs/config';
+import { AppConfigModule, AppConfigService, rabbitmqConfig } from 'libs/config';
 import { IDENTITY_CLIENT } from './identity-client.constants';
 import { IdentityClientService } from './identity-client.service';
 
@@ -10,6 +10,7 @@ import { IdentityClientService } from './identity-client.service';
     ClientsModule.registerAsync([
       {
         name: IDENTITY_CLIENT,
+        imports: [AppConfigModule.forFeature([rabbitmqConfig])],
         useFactory: (configService: AppConfigService) => ({
           transport: Transport.RMQ,
           options: {
