@@ -4,6 +4,7 @@ import type { Prisma } from 'libs/prisma/generated/nutrition-service/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RecipeEntity } from '../entities/recipe.entity';
 import { toRecipeEntity } from '../mapping/recipe.mapping';
+import { AppLogger } from 'libs/common';
 
 export interface RecipePaginateOptions {
   page?: number;
@@ -32,9 +33,17 @@ export interface UpdateRecipeInput {
   };
 }
 
+export interface CleanupUserRecipeDataResult {
+  userId: string;
+  deactivatedRecipes: number;
+  deactivatedRecipeLikes: number;
+  deactivatedRecipeComments: number;
+  updatedRecipeLikes: number;
+}
+
 @Injectable()
 export class RecipeRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly logger: AppLogger) {}
 
   async createRecipe(input: CreateRecipeInput): Promise<RecipeEntity> {
     const recipe = await this.prisma.$transaction(async (tx) => {
@@ -161,6 +170,89 @@ export class RecipeRepository {
     });
 
     return toRecipeEntity(recipe);
+  }
+
+  async cleanupUserData(userId: string): Promise<CleanupUserRecipeDataResult> {
+    try {
+      const authoredRecipes = await this.prisma.recipe.findMany({
+        where: {
+          userRecipes: {
+            some: { userId },
+          },
+        },
+        select: { id: true },
+      });
+      const authoredRecipeIds = authoredRecipes.map((recipe) => recipe.id);
+      const deactivatedRecipes = authoredRecipeIds.length
+        ? await this.prisma.recipe.updateMany({
+            where: {
+              id: { in: authoredRecipeIds },
+              status: { not: 'inactive' },
+            },
+            data: { status: 'inactive' },
+          })
+        : { count: 0 };
+
+      return await this.prisma.$transaction(async (tx) => {
+      const relatedRecipeWhere = authoredRecipeIds.length
+        ? {
+            OR: [
+              { authorId: userId },
+              { recipeId: { in: authoredRecipeIds } },
+            ],
+          }
+        : { authorId: userId };
+      const activeLikesByRecipe = await tx.recipeLikes.groupBy({
+        by: ['recipeId'],
+        where: {
+          ...relatedRecipeWhere,
+          status: 'active',
+        },
+        _count: { recipeId: true },
+      });
+      const [deactivatedRecipeLikes, deactivatedRecipeComments] =
+        await Promise.all([
+          tx.recipeLikes.updateMany({
+            where: {
+              ...relatedRecipeWhere,
+              status: 'active',
+            },
+            data: { status: 'inactive' },
+          }),
+          tx.recipeComments.updateMany({
+            where: {
+              ...relatedRecipeWhere,
+              status: 'active',
+            },
+            data: { status: 'inactive' },
+          }),
+        ]);
+
+      await Promise.all(
+        activeLikesByRecipe.map((recipeLikeGroup) =>
+          tx.recipe.update({
+            where: { id: recipeLikeGroup.recipeId },
+            data: {
+              likes: {
+                decrement: recipeLikeGroup._count.recipeId,
+              },
+            },
+          }),
+        ),
+      );
+
+      return {
+        userId,
+        deactivatedRecipes: deactivatedRecipes.count,
+        deactivatedRecipeLikes: deactivatedRecipeLikes.count,
+        deactivatedRecipeComments: deactivatedRecipeComments.count,
+        updatedRecipeLikes: activeLikesByRecipe.length,
+      };
+      });
+    } catch (error) {
+      this.logger.error('Error cleaning up user data:', error);
+      throw error;
+    }
   }
 
   private buildRecipeWhere(

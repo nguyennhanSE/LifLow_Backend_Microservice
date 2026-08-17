@@ -104,6 +104,10 @@ export class RecipeService {
     };
   }
 
+  handleUserDeleted(userId: string) {
+    return this.recipeRepository.cleanupUserData(userId);
+  }
+
   private buildRecipeUpdateInput(
     updateRecipeDto: UpdateRecipeDto,
   ): Prisma.RecipeUncheckedUpdateInput {

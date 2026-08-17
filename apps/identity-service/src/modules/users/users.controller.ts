@@ -102,8 +102,9 @@ export class UsersController {
   }
 
   @MessagePattern(IDENTITY_USER_PATTERNS.deleteUser)
-  deleteUser(@Payload() payload: IdentityRequestPayload<UserParamPayload>) {
-    return this.usersService.remove(payload.data.id);
+  async deleteUser(@Payload() payload: IdentityRequestPayload<UserParamPayload>) {
+    const deletedUser = await this.usersService.remove(payload.data.id, payload.metadata);
+    return deletedUser;
   }
 
   @MessagePattern(IDENTITY_USER_PATTERNS.updateMyAvatar)

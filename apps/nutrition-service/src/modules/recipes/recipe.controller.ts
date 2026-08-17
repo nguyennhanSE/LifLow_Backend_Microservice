@@ -1,5 +1,9 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import {
+  IDENTITY_USER_PATTERNS,
+  UserDeletedPayload,
+} from '../../clients/identity/identity-client.constants';
 import type { NutritionRequestPayload } from '../../common';
 import {
   CreateRecipeDto,
@@ -42,5 +46,12 @@ export class RecipeController {
   @MessagePattern(RECIPE_PATTERNS.deleteRecipe)
   deleteRecipe(@Payload() payload: NutritionRequestPayload<RecipeIdPayload>) {
     return this.recipeService.remove(payload.data.id);
+  }
+
+  @EventPattern(IDENTITY_USER_PATTERNS.userDeleted)
+  handleUserDeleted(
+    @Payload() payload: NutritionRequestPayload<UserDeletedPayload>,
+  ) {
+    return this.recipeService.handleUserDeleted(payload.data.userId);
   }
 }

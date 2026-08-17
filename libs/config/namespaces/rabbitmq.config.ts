@@ -25,6 +25,9 @@ export const rabbitmqConfig = registerAs('rabbitmq', () => ({
   queueOptions: {
     durable: toBoolean(process.env.RMQ_QUEUE_DURABLE, false),
   },
+  exchanges: {
+    userEvents: process.env.USER_EVENTS_EXCHANGE ?? 'user.events',
+  },
   queues: {
     identity: process.env.IDENTITY_QUEUE ?? 'identity_queue',
     loyalty: process.env.LOYALTY_QUEUE ?? 'loyalty_queue',

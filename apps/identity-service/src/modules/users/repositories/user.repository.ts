@@ -201,7 +201,13 @@ export class UserRepository {
   }
 
   deleteUser(id: string): Promise<User> {
-    return this.prisma.user.delete({ where: { id } });
+    return this.prisma.user.update({
+      where: { id },
+      data: { 
+        dormancyStatus: true,
+        dormancyDate: new Date().toISOString()
+       },
+    });
   }
 
   async findUsersPaginated(params: {

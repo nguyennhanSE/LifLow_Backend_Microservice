@@ -30,5 +30,7 @@ export const IDENTITY_USER_PATTERNS = {
   findUserId: 'user.find-id',
   findPassword: 'user.find-password',
 
+  // events
+  userDeleted: 'user.deleted',
   membershipUpdated: 'membership.updated',
 } as const;

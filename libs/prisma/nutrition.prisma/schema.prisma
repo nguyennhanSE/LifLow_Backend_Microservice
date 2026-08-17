@@ -56,12 +56,17 @@ model RecipeComments {
   id        String   @id @default(uuid())
   recipeId  String   @map("recipe_id")
   authorId  String   @map("author_id")
+  status    String   @default("active") @map("status") // active | inactive
   content   String   @map("content")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
+  @@index([authorId, recipeId])
+  @@index([recipeId])
+  @@index([authorId])
+  @@index([status])
   @@map("recipe_comments")
 }
 

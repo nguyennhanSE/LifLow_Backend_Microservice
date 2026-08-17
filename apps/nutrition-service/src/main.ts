@@ -21,6 +21,11 @@ async function bootstrap() {
         'rabbitmq.queues.nutrition',
         'nutrition_queue',
       ),
+      exchange: configService.get<string>(
+        'rabbitmq.exchanges.userEvents',
+        'user.events',
+      ),
+      exchangeType: 'fanout',
       queueOptions: {
         durable: configService.get<boolean>(
           'rabbitmq.queueOptions.durable',

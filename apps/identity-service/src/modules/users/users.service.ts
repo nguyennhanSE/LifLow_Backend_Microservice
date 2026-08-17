@@ -21,6 +21,8 @@ import {
 import { UserEntity } from './entities/user.entity';
 import { toUserEntity } from './mapping/user.mapping';
 import { UserRepository, UserWithRoles } from './repositories/user.repository';
+import { IdentityClientService } from '../../clients/identity/identity-client.service';
+import { IdentityRequestMetadata } from '../../common';
 
 const PERMISSION_FIELDS = [
   'dashboardAccess',
@@ -33,7 +35,9 @@ const PERMISSION_FIELDS = [
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(private readonly userRepository: UserRepository,
+    private readonly identityClient: IdentityClientService
+  ) {}
 
   async countNewSignupsToday(): Promise<{ date: string; count: number }> {
     const now = new Date();
@@ -209,9 +213,10 @@ export class UsersService {
     return this.mapUser(user);
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, metadata?: IdentityRequestMetadata): Promise<{ message: string }> {
     await this.findOne(id);
     await this.userRepository.deleteUser(id);
+    await this.identityClient.emit('user.deleted', { data: {userId : id}, metadata });
 
     return { message: `User ${id} deleted successfully` };
   }
