@@ -5,6 +5,7 @@ import { AppConfigModule } from 'libs/config';
 import { AppQueueModule } from 'libs/queue';
 import { nutritionServiceConfig } from './config/nutrition-service.config';
 import { RequestInterceptor } from './interceptors/request.interceptor';
+import { RecipeLikeModule } from './modules/recipe-likes/recipe-like.module';
 import { RecipeModule } from './modules/recipes/recipe.module';
 import { NutritionServiceController } from './nutrition-service.controller';
 import { NutritionServiceService } from './nutrition-service.service';
@@ -19,6 +20,7 @@ import { NutritionQueueModule } from './queue/nutrition-queue.module';
     PrismaModule,
     NutritionQueueModule,
     RecipeModule,
+    RecipeLikeModule,
   ],
   controllers: [NutritionServiceController],
   providers: [

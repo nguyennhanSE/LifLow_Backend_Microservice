@@ -61,11 +61,22 @@ export class RecipeRepository {
   }
 
   async getRecipeById(id: string): Promise<RecipeEntity | null> {
-    const recipe = await this.prisma.recipe.findUnique({
-      where: { id },
-      include: { userRecipes: true },
-    });
+    const recipe = await this.prisma.$transaction(async (tx) => {
+      const foundRecipe = await tx.recipe.findUnique({
+        where: { id },
+        include: { userRecipes: true },
+      });
 
+      const updatedRecipe = foundRecipe
+        ? await tx.recipe.update({
+            where: { id },
+            data: { views: { increment: 1 } },
+            include: { userRecipes: true },
+          })
+        : null;
+
+      return updatedRecipe;
+    });
     return recipe ? toRecipeEntity(recipe) : null;
   }
 

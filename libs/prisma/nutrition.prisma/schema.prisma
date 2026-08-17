@@ -71,12 +71,14 @@ model RecipeLikes {
   recipeId  String   @map("recipe_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  status  String   @default("active") @map("status") // active | inactive
 
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@unique([authorId, recipeId])
   @@index([recipeId])
   @@index([authorId])
+  @@index([authorId, recipeId, status])
   @@map("recipe_likes")
 }
 
