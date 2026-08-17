@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RecipeServiceController } from './nutrition-service.controller';
-import { RecipeServiceService } from './nutrition-service.service';
+import { NutritionServiceController } from './nutrition-service.controller';
+import { NutritionServiceService } from './nutrition-service.service';
 
 describe('NutritionServiceController', () => {
   let nutritionServiceController: NutritionServiceController;
@@ -11,7 +11,9 @@ describe('NutritionServiceController', () => {
       providers: [NutritionServiceService],
     }).compile();
 
-    nutritionServiceController = app.get<NutritionServiceController>(NutritionServiceController);
+    nutritionServiceController = app.get<NutritionServiceController>(
+      NutritionServiceController,
+    );
   });
 
   describe('root', () => {

@@ -15,65 +15,69 @@ enum RecipeCategory {
 }
 
 model Recipe {
-    id             String   @id @default(uuid())
-    title          String   @db.VarChar(255)
-    category       RecipeCategory   @map("category") // denormalized category name
-    dateOfWriting  DateTime @map("date_of_writing")
-    views          Int      @default(0)
-    status         String   @default("pending") // e.g., pending | approved | rejected
-    thumbnailUrl   String[]  @map("thumbnail_url")
-    content        String
-    ingredients    String[] @map("ingredients")
-    // extension
-    isActive       Boolean @default(true) @map("is_active") // 활성화 여부
-    likes          Int?   @default(0) @map("likes") // 좋아요 수
+  id            String           @id @default(uuid())
+  title         String           @db.VarChar(255)
+  category      RecipeCategory   @map("category") // denormalized category name
+  dateOfWriting DateTime         @map("date_of_writing")
+  views         Int              @default(0)
+  status        String           @default("pending") // e.g., pending | approved | rejected
+  thumbnailUrl  String[]         @map("thumbnail_url")
+  content       String
+  ingredients   String[]         @map("ingredients")
+  // extension
+  isActive      Boolean          @default(true) @map("is_active") // 활성화 여부
+  likes         Int?             @default(0) @map("likes") // 좋아요 수
 
-    recipeComments RecipeComments[]
-    recipeLikes RecipeLikes[]
-    @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
-    @@index([category])
-    @@index([status])
-    @@index([dateOfWriting])
-    @@map("recipes")
+  recipeComments RecipeComments[]
+  recipeLikes    RecipeLikes[]
+  userRecipes    UserRecipes[]
+
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([category])
+  @@index([status])
+  @@index([dateOfWriting])
+  @@map("recipes")
 }
 
 model UserRecipes {
-    id String @id @default(increment())
-    userId String @map("user_id")
-    recipeId String @unique @map("recipe_id")
-    productId String? @map("product_id")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    // Relations
-    recipe Recipe? @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-    @@map("user_recipes")
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  recipeId  String   @unique @map("recipe_id")
+  productId String?  @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("user_recipes")
 }
 
 model RecipeComments {
-    id String @id @default(increment())
-    recipeId String @map("recipe_id")
-    authorId String @map("author_id")
-    content String @map("content")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    // Relations
-    recipe Recipe? @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-    @@map("recipe_comments")
+  id        String   @id @default(uuid())
+  recipeId  String   @map("recipe_id")
+  authorId  String   @map("author_id")
+  content   String   @map("content")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("recipe_comments")
 }
 
 model RecipeLikes {
-    id       String   @id @default(increment())
-    authorId  String   @map("author_id")
-    recipeId  String   @map("recipe_id")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  authorId  String   @map("author_id")
+  recipeId  String   @map("recipe_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
-    @@index([recipeId,authorId])
-    @@index([recipeId])
-    @@index([authorId])
-    @@map("recipe_likes")
+  @@unique([authorId, recipeId])
+  @@index([recipeId])
+  @@index([authorId])
+  @@map("recipe_likes")
 }
 
 enum RequestStatus {

@@ -139,13 +139,14 @@
         "tsConfigPath": "apps/promotion-service/tsconfig.app.json"
       }
     },
-    "recipe-service": {
+    "nutrition-service": {
       "type": "application",
-      "root": "apps/recipe-service",
+      "root": "apps/nutrition-service",
       "entryFile": "main",
-      "sourceRoot": "apps/recipe-service/src",
+      "sourceRoot": "apps/nutrition-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/recipe-service/tsconfig.app.json"
+        "webpack": false,
+        "tsConfigPath": "apps/nutrition-service/tsconfig.app.json"
       }
     }
   }

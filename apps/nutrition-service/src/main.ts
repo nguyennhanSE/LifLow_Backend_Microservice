@@ -1,8 +1,53 @@
+import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { RecipeServiceModule } from './nutrition-service.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppConfigService } from 'libs/config';
+import { NutritionServiceModule } from './nutrition-service.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(RecipeServiceModule);
-  await app.listen(process.env.port ?? 3000);
+  const app = await NestFactory.create(NutritionServiceModule);
+  const configService = app.get(AppConfigService);
+
+  configureSwagger(app);
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: configService.get<string[]>('rabbitmq.urls', [
+        'amqp://localhost:5672',
+      ]),
+      queue: configService.get<string>(
+        'rabbitmq.queues.nutrition',
+        'nutrition_queue',
+      ),
+      queueOptions: {
+        durable: configService.get<boolean>(
+          'rabbitmq.queueOptions.durable',
+          false,
+        ),
+      },
+    },
+  });
+
+  await app.startAllMicroservices();
+  await app.listen(configService.get<number>('nutritionService.port', 3503));
 }
-bootstrap();
+
+function configureSwagger(app: INestApplication) {
+  const config = new DocumentBuilder()
+    .setTitle('Liflow Nutrition Service')
+    .setDescription('HTTP API documentation for Liflow Nutrition Service')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+}
+
+void bootstrap();
