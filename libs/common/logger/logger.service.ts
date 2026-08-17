@@ -48,8 +48,12 @@ export class AppLogger {
       this.logger.error(finalMessage, trace, context);
       return;
     }
+    if (context) {
+      this.logger[level](finalMessage, ...optionalParams, context);
+      return;
+    }
 
-    this.logger[level](finalMessage, ...optionalParams, context);
+    this.logger[level](finalMessage, ...optionalParams);
   }
 
   private extractContext(optionalParams: unknown[]): string | undefined {

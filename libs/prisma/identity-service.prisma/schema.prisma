@@ -24,7 +24,7 @@ model User {
   totalUsedPoints     Int?    @default(0) @map("total_used_points")
   availablePoints     Int?    @default(0) @map("available_points")
   registrationDate    String? @map("registration_date") // Join Date
-  dormancyStatus       Boolean? @default(false) @map("dormancy_status") // true if account is dormant
+  dormancyStatus      String? @default("active") @map("dormancy_status") // "active" or "inactive"
   dormancyDate        String? @map("dormancy_date") // Date account marked inactive
   withdrawalDate      String? @map("withdrawal_date")
   withdrawalType      String? @map("withdrawal_type")

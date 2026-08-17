@@ -28,7 +28,9 @@ async function bootstrap() {
         ),
       },
     },
-  });
+  },
+  {inheritAppConfig: true}
+);
 
   await app.startAllMicroservices();
   await app.listen(configService.get<number>('identityService.port', 3501));

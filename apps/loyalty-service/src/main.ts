@@ -28,7 +28,9 @@ async function bootstrap() {
         ),
       },
     },
-  });
+  },
+  {inheritAppConfig: true}
+);
 
   await app.startAllMicroservices();
   await app.listen(configService.get<number>('loyaltyService.port', 3502));

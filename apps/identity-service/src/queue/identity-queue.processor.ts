@@ -38,7 +38,7 @@ export class IdentityQueueProcessor extends WorkerHost {
     if (!requestLogId) {
       throw new Error('[IdentityQueue] requestLogId is required');
     }
-
+    this.logger.debug(`[IdentityQueue] Handling inserting log into Loki for ID: ${requestLogId}`);
     try {
       await this.lokiService.push(log);
       await this.prisma.requestLog.update({

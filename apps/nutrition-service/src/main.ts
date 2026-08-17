@@ -33,7 +33,9 @@ async function bootstrap() {
         ),
       },
     },
-  });
+  },
+  {inheritAppConfig: true}
+);
 
   await app.startAllMicroservices();
   await app.listen(configService.get<number>('nutritionService.port', 3503));

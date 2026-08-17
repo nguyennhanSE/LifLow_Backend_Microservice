@@ -11,6 +11,7 @@ export class UserEntity {
   totalUsedPoints?: number; // @map("total_used_points")
   availablePoints?: number; // @map("available_points")
   registrationDate?: string; // @map("registration_date") // Join Date
+  dormancyStatus!: string ; // @map("dormancy_status") // Dormancy status (active, inactive)
   dormancyDate?: string | null; // @map("dormancy_date") // Date account marked inactive
   withdrawalDate?: string | null; // @map("withdrawal_date")
   withdrawalType?: string | null; // @map("withdrawal_type")

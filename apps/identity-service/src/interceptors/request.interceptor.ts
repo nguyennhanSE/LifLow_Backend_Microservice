@@ -20,6 +20,7 @@ import type {
 } from '../common';
 import { PrismaService } from '../prisma/prisma.service';
 import { IdentityQueueService } from '../queue/identity-queue.service';
+import { AppLogger } from 'libs/common/logger/logger.service';
 
 const SERVICE_NAME = 'identity-service';
 
@@ -50,10 +51,10 @@ type RequestLogContext = {
 @Injectable()
 export class RequestInterceptor implements NestInterceptor {
   private readonly serviceIp = this.getServiceIp();
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly identityQueueService: IdentityQueueService,
+    private readonly logger: AppLogger,
   ) {}
 
   async intercept(
@@ -64,6 +65,7 @@ export class RequestInterceptor implements NestInterceptor {
     const metadata = payload.metadata;
     const requestPattern =
       this.getRequestPattern(context) ?? metadata?.requestPattern ?? undefined;
+    this.logger.debug(`[RequestInterceptor] Intercepting request with pattern: ${requestPattern}`);
     const requestLog = await this.createRequestLog({
       traceId: metadata?.traceId ?? undefined,
       parentRequestId:

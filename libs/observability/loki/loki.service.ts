@@ -39,14 +39,13 @@ export class LokiService {
         ],
       }),
     });
-
+    if (response.ok) {
+      this.logger.debug(
+        `[LokiService] Successfully pushed log to Loki for requestId: ${log.requestId}`,
+      );
+    }
     if (!response.ok) {
       throw new Error(`Loki push failed with status ${response.status}`);
     }
-
-    this.logger.debug(
-      `[${this.context}] Pushed request log ${log.requestId ?? 'n/a'} to Loki`,
-      this.context,
-    );
   }
 }

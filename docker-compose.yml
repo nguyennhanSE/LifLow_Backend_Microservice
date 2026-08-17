@@ -118,6 +118,33 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      
+  nutrition-postgres:
+    image: postgres:17-alpine
+    container_name: nutrition-postgres-microservice
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: ${NUTRITION_SERVICE_DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${NUTRITION_SERVICE_DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${NUTRITION_SERVICE_DATABASE_NAME:-postgres}
+    volumes:
+      - nutrition_postgres_data_microservice:/var/lib/postgresql/data
+    ports:
+      - "${NUTRITION_SERVICE_DATABASE_PORT:-5436}:5432"
+    networks:
+      - liflow-network-microservice
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      
+  
   redis: 
     image: redis:7-alpine
     container_name: redis-microservice
@@ -208,7 +235,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data_microservice:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./libs/observability/grafana/provisioning:/etc/grafana/provisioning
     restart: unless-stopped
     networks:
       - liflow-network-microservice
@@ -356,6 +383,7 @@ volumes:
   api_gateway_postgres_data_microservice:
   identity_postgres_data_microservice:
   loyalty_postgres_data_microservice:
+  nutrition_postgres_data_microservice:
   redis_data_microservice:
   prometheus_data_microservice:
   grafana_data_microservice:

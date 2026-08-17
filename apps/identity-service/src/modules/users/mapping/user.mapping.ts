@@ -20,6 +20,7 @@ export function toUserEntity(
   userEntity.totalUsedPoints = user.totalUsedPoints ?? undefined;
   userEntity.availablePoints = user.availablePoints ?? undefined;
   userEntity.registrationDate = user.registrationDate ?? undefined;
+  userEntity.dormancyStatus = user.dormancyStatus ?? 'active';
   userEntity.dormancyDate = user.dormancyDate;
   userEntity.withdrawalDate = user.withdrawalDate;
   userEntity.withdrawalType = user.withdrawalType;

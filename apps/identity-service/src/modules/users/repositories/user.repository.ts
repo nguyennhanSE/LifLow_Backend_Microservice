@@ -56,7 +56,7 @@ export class UserRepository {
 
   findById(id: string): Promise<UserWithRoles | null> {
     return this.prisma.user.findUnique({
-      where: { id },
+      where: { id , dormancyStatus: 'active'},
       include: this.userRolesInclude(),
     });
   }
@@ -67,6 +67,7 @@ export class UserRepository {
     return this.prisma.user.findFirst({
       where: {
         OR: [{ id: value }, { email: value }, { phoneNumber: value }],
+        AND: { dormancyStatus: 'active' },
       },
       include: this.userRolesInclude(),
     });
@@ -74,21 +75,21 @@ export class UserRepository {
 
   findByEmail(email: string): Promise<UserWithRoles | null> {
     return this.prisma.user.findFirst({
-      where: { email },
+      where: { email, dormancyStatus: 'active' },
       include: this.userRolesInclude(),
     });
   }
 
   findByIds(ids: string[]): Promise<UserWithRoles[]> {
     return this.prisma.user.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids } , dormancyStatus: 'active'},
       include: this.userRolesInclude(),
     });
   }
 
   findByEmails(emails: string[]): Promise<UserWithRoles[]> {
     return this.prisma.user.findMany({
-      where: { email: { in: emails } },
+      where: { email: { in: emails }, dormancyStatus: 'active' },
       include: this.userRolesInclude(),
     });
   }
@@ -101,6 +102,7 @@ export class UserRepository {
           { email: { in: accounts } },
           { phoneNumber: { in: accounts } },
         ],
+        AND: { dormancyStatus: 'active' },
       },
       include: this.userRolesInclude(),
     });
@@ -108,7 +110,7 @@ export class UserRepository {
 
   findByEmailAndName(email: string, name: string): Promise<User | null> {
     return this.prisma.user.findFirst({
-      where: { email, name },
+      where: { email, name, dormancyStatus: 'active' },
     });
   }
 
@@ -118,7 +120,7 @@ export class UserRepository {
     email: string,
   ): Promise<User | null> {
     return this.prisma.user.findFirst({
-      where: { id, name, email },
+      where: { id, name, email, dormancyStatus: 'active' },
     });
   }
 
@@ -204,7 +206,7 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { id },
       data: { 
-        dormancyStatus: true,
+        dormancyStatus: 'inactive',
         dormancyDate: new Date().toISOString()
        },
     });
@@ -467,6 +469,8 @@ export class UserRepository {
         ];
       }
     }
+
+    where.AND = { dormancyStatus: 'active' };
 
     return where;
   }
