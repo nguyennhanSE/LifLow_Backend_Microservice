@@ -163,13 +163,7 @@ model RequestLog {
   lokiRetryCount Int       @default(0) @map("loki_retry_count")
 
   @@index([userId, occurredAt])
-  @@index([entityType, entityId, occurredAt])
   @@index([traceId, occurredAt])
-  @@index([requestId])
-  @@index([parentRequestId])
   @@index([correlationId, occurredAt])
-  @@index([requestPattern, occurredAt])
-  @@index([requestStatus, occurredAt])
-  @@index([lokiPushedAt])
   @@map("request_logs")
 }

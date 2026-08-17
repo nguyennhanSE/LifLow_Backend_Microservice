@@ -30,5 +30,6 @@ export const rabbitmqConfig = registerAs('rabbitmq', () => ({
     loyalty: process.env.LOYALTY_QUEUE ?? 'loyalty_queue',
     audit: process.env.AUDIT_QUEUE ?? 'audit_queue',
     notification: process.env.NOTIFICATION_QUEUE ?? 'notification_queue',
+    nutrition: process.env.NUTRITION_QUEUE ?? 'nutrition_queue',
   },
 }));

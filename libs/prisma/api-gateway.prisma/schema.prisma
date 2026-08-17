@@ -15,7 +15,7 @@ enum TraceStatus {
 }
 
 model Trace {
-  id        String      @id @unique @default(uuid())
+  id        String      @id @default(uuid())
   sequence  Int         @unique @default(autoincrement()) @map("sequence")
   traceId   String      @unique @map("trace_id")
   method    String      @map("method")
@@ -26,5 +26,4 @@ model Trace {
   endedAt   DateTime    @map("ended_at")
   status    TraceStatus @default(PENDING) @map("status")
 
-  @@index([traceId])
 }

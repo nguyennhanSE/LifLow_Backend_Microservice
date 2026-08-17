@@ -1,0 +1,124 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/nutrition-service"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RecipeCategory {
+  RECIPE
+  REVIEWS
+  DAILY_LIFE
+}
+
+model Recipe {
+    id             String   @id @default(uuid())
+    title          String   @db.VarChar(255)
+    category       RecipeCategory   @map("category") // denormalized category name
+    dateOfWriting  DateTime @map("date_of_writing")
+    views          Int      @default(0)
+    status         String   @default("pending") // e.g., pending | approved | rejected
+    thumbnailUrl   String[]  @map("thumbnail_url")
+    content        String
+    ingredients    String[] @map("ingredients")
+    // extension
+    isActive       Boolean @default(true) @map("is_active") // 활성화 여부
+    likes          Int?   @default(0) @map("likes") // 좋아요 수
+
+    recipeComments RecipeComments[]
+    recipeLikes RecipeLikes[]
+    @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+    @@index([category])
+    @@index([status])
+    @@index([dateOfWriting])
+    @@map("recipes")
+}
+
+model UserRecipes {
+    id String @id @default(increment())
+    userId String @map("user_id")
+    recipeId String @unique @map("recipe_id")
+    productId String? @map("product_id")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    // Relations
+    recipe Recipe? @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+    @@map("user_recipes")
+}
+
+model RecipeComments {
+    id String @id @default(increment())
+    recipeId String @map("recipe_id")
+    authorId String @map("author_id")
+    content String @map("content")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    // Relations
+    recipe Recipe? @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+    @@map("recipe_comments")
+}
+
+model RecipeLikes {
+    id       String   @id @default(increment())
+    authorId  String   @map("author_id")
+    recipeId  String   @map("recipe_id")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+    @@index([recipeId,authorId])
+    @@index([recipeId])
+    @@index([authorId])
+    @@map("recipe_likes")
+}
+
+enum RequestStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model RequestLog {
+  id       String @id @default(uuid())
+  sequence Int    @unique @default(autoincrement())
+
+  // Trace / message context
+  traceId         String?        @map("trace_id")
+  requestId       String?        @unique @map("request_id")
+  parentRequestId String?        @map("parent_request_id")
+  correlationId   String?        @map("correlation_id")
+  causationId     String?        @map("causation_id")
+  requestPattern  String?        @map("request_pattern")
+  requestStatus   RequestStatus? @default(PENDING) @map("request_status")
+
+  // Service / source context
+  serviceName     String? @map("service_name")
+  serviceIp       String? @map("service_ip")
+  serviceMetadata Json?   @map("service_metadata")
+
+  // Actor
+  userId      String? @map("user_id")
+  anonymousId String? @map("anonymous_id")
+  sessionId   String? @map("session_id")
+  actorType   String? @map("actor_type") // user, admin, system, service
+
+  // Entity
+  entityType String? @map("entity_type")
+  entityId   String? @map("entity_id")
+
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  lokiPushedAt   DateTime? @map("loki_pushed_at")
+  lokiPushError  String?   @map("loki_push_error")
+  lokiRetryCount Int       @default(0) @map("loki_retry_count")
+
+  @@index([userId, occurredAt])
+  @@index([traceId, occurredAt])
+  @@index([correlationId, occurredAt])
+  @@map("request_logs")
+}
