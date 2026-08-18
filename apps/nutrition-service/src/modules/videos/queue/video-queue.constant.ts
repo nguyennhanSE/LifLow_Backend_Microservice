@@ -5,6 +5,7 @@ export const VIDEO_QUEUE_NAME = 'video-queue';
 export const VIDEO_FINALIZE_MULTIPART_UPLOAD_JOB =
   'video-finalize-multipart-upload';
 
+export const VIDEO_TRANSCODE_JOB = 'video-transcode';
 export interface FinalizeMultipartUploadJobPayload {
   uploadSessionId: string;
   parts: CompleteMultipartUploadPartDto[];
@@ -12,4 +13,9 @@ export interface FinalizeMultipartUploadJobPayload {
     url: string;
     etag?: string;
   };
+}
+
+export interface TranscodeVideoJobPayload {
+  videoAssetId: string;
+  targetFormat: 'mp4' | 'webm' | 'hls';
 }
