@@ -7,6 +7,7 @@ import {
 import type { NutritionRequestPayload } from '../../common';
 import {
   CreateRecipeDto,
+  PatchRecipeThumbnailDto,
   QueryRecipeDto,
   RecipeIdPayload,
   UpdateRecipePayload,
@@ -53,5 +54,17 @@ export class RecipeController {
     @Payload() payload: NutritionRequestPayload<UserDeletedPayload>,
   ) {
     return this.recipeService.handleUserDeleted(payload.data.userId);
+  }
+
+  @MessagePattern(RECIPE_PATTERNS.patchRecipeThumbnail)
+  patchRecipeThumbnail(
+    @Payload()
+    payload: NutritionRequestPayload<PatchRecipeThumbnailDto>,
+  ) {
+    return this.recipeService.patchRecipeThumbnail(
+      payload.data.recipeId,
+      payload.data.fileMetadata,
+      { replace: payload.data.replace },
+    );
   }
 }

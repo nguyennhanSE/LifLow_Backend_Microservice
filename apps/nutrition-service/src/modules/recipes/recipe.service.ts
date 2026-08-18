@@ -1,14 +1,18 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AwsService } from 'libs/object-storage/aws/s3/aws.service';
 import type { IPaginate } from 'libs/common/pagination/pagination.model';
 import type { Prisma } from 'libs/prisma/generated/nutrition-service/client';
 import type { NutritionRequestMetadata } from '../../common';
 import {
   CreateRecipeDto,
+  RecipeThumbnailFileMetadataDto,
   QueryRecipeDto,
+  SerializedBuffer,
   UpdateRecipeDto,
 } from './dtos/recipe.dto';
 import { RecipeEntity } from './entities/recipe.entity';
@@ -16,7 +20,10 @@ import { RecipeRepository } from './repositories/recipe.repository';
 
 @Injectable()
 export class RecipeService {
-  constructor(private readonly recipeRepository: RecipeRepository) {}
+  constructor(
+    private readonly recipeRepository: RecipeRepository,
+    private readonly awsService: AwsService,
+  ) {}
 
   create(
     createRecipeDto: CreateRecipeDto,
@@ -108,6 +115,39 @@ export class RecipeService {
     return this.recipeRepository.cleanupUserData(userId);
   }
 
+  async patchRecipeThumbnail(
+    recipeId: string,
+    fileMetadata: RecipeThumbnailFileMetadataDto,
+    options: { replace?: boolean } = {replace: false},
+  ): Promise<RecipeEntity> {
+    const existingRecipe =
+      await this.recipeRepository.getRecipeThumbnailById(recipeId);
+
+    if (!existingRecipe) {
+      throw new NotFoundException(`Recipe with id "${recipeId}" not found`);
+    }
+
+    const body = this.toBuffer(fileMetadata);
+    const key = this.buildThumbnailKey(recipeId, fileMetadata.originalname);
+    const { url } = await this.awsService.uploadObject({
+      key,
+      body,
+      contentType: fileMetadata.mimetype,
+      isPublic: true,
+      cacheControl: 'public, max-age=31536000',
+    });
+
+    if (!url) {
+      throw new InternalServerErrorException('S3 did not return thumbnail URL');
+    }
+
+    const thumbnailUrl = options.replace
+      ? [url]
+      : [...existingRecipe.thumbnailUrl, url];
+
+    return this.recipeRepository.patchRecipeThumbnail(recipeId, thumbnailUrl);
+  }
+
   private buildRecipeUpdateInput(
     updateRecipeDto: UpdateRecipeDto,
   ): Prisma.RecipeUncheckedUpdateInput {
@@ -160,5 +200,50 @@ export class RecipeService {
       userId: updateRecipeDto.authorId,
       productId: updateRecipeDto.productId ?? null,
     };
+  }
+
+  private toBuffer(fileMetadata: RecipeThumbnailFileMetadataDto): Buffer {
+    if (fileMetadata.base64) {
+      return Buffer.from(this.stripDataUrlPrefix(fileMetadata.base64), 'base64');
+    }
+
+    if (fileMetadata.buffer) {
+      return this.bufferFromSerialized(fileMetadata.buffer);
+    }
+
+    throw new BadRequestException('Thumbnail file buffer or base64 is required');
+  }
+
+  private bufferFromSerialized(buffer: SerializedBuffer): Buffer {
+    if (Buffer.isBuffer(buffer)) {
+      return buffer;
+    }
+
+    if (buffer instanceof Uint8Array) {
+      return Buffer.from(buffer);
+    }
+
+    if (Array.isArray(buffer)) {
+      return Buffer.from(buffer);
+    }
+
+    if (Array.isArray(buffer.data)) {
+      return Buffer.from(buffer.data);
+    }
+
+    throw new BadRequestException('Invalid thumbnail file buffer');
+  }
+
+  private stripDataUrlPrefix(base64: string): string {
+    const [, data] = base64.split(',', 2);
+    return data ?? base64;
+  }
+
+  private buildThumbnailKey(recipeId: string, originalName?: string): string {
+    const ext =
+      (originalName || '').split('.').pop()?.toLowerCase().replace(/\W/g, '') ||
+      'bin';
+
+    return `recipes/${recipeId}/thumbnails/${Date.now()}.${ext}`;
   }
 }

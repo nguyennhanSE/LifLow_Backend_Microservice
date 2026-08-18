@@ -1,4 +1,5 @@
 import type { RecipeCategory } from 'libs/prisma/generated/nutrition-service/client';
+import type { VideoAssetEntity } from '../../videos/entities/video-asset.entity';
 
 export class RecipeEntity {
   id!: string;
@@ -14,4 +15,7 @@ export class RecipeEntity {
   likes!: number;
   authorId?: string;
   productId?: string;
+  // video
+  videoAssetId?: string;
+  videoAsset?: VideoAssetEntity | null;
 }

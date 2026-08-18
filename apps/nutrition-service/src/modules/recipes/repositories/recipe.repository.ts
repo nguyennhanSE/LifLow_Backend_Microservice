@@ -163,6 +163,31 @@ export class RecipeRepository {
     return toRecipeEntity(recipe);
   }
 
+  async getRecipeThumbnailById(
+    id: string,
+  ): Promise<Pick<RecipeEntity, 'id' | 'thumbnailUrl'> | null> {
+    return this.prisma.recipe.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        thumbnailUrl: true,
+      },
+    });
+  }
+
+  async patchRecipeThumbnail(
+    id: string,
+    thumbnailUrl: string[],
+  ): Promise<RecipeEntity> {
+    const recipe = await this.prisma.recipe.update({
+      where: { id },
+      data: { thumbnailUrl },
+      include: { userRecipes: true },
+    });
+
+    return toRecipeEntity(recipe);
+  }
+
   async deleteRecipe(id: string): Promise<RecipeEntity> {
     const recipe = await this.prisma.recipe.delete({
       where: { id },

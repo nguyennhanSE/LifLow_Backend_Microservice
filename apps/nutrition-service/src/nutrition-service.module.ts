@@ -7,10 +7,12 @@ import { nutritionServiceConfig } from './config/nutrition-service.config';
 import { RequestInterceptor } from './interceptors/request.interceptor';
 import { RecipeLikeModule } from './modules/recipe-likes/recipe-like.module';
 import { RecipeModule } from './modules/recipes/recipe.module';
+import { VideoModule } from './modules/videos/video.module';
 import { NutritionServiceController } from './nutrition-service.controller';
 import { NutritionServiceService } from './nutrition-service.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { NutritionQueueModule } from './queue/nutrition-queue.module';
+import { AwsModule } from 'libs/object-storage/aws/s3/aws.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { NutritionQueueModule } from './queue/nutrition-queue.module';
     NutritionQueueModule,
     RecipeModule,
     RecipeLikeModule,
+    VideoModule,
+    AwsModule,
   ],
   controllers: [NutritionServiceController],
   providers: [

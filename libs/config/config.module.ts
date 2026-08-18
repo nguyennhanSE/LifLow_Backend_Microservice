@@ -6,11 +6,15 @@ import {
 import { AppConfigService } from './config.service';
 import { validateEnv } from './env.validation';
 import { appConfig, rabbitmqConfig } from './namespaces';
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env' });
 
 const getEnvFilePaths = (): string[] => {
-  const nodeEnv = process.env.NODE_ENV;
-
-  return [nodeEnv ? `.env.${nodeEnv}` : '.env.dev'];
+  const NODE_ENV = process.env.NODE_ENV || 'development';
+  const envFile = NODE_ENV === 'production' ? '.env.prod' : '.env.dev';
+  
+  console.log('Using env file:', envFile);
+  return [envFile];
 };
 
 @Module({

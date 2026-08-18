@@ -235,7 +235,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data_microservice:/var/lib/grafana
-      - ./libs/observability/grafana/provisioning:/etc/grafana/provisioning
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
     restart: unless-stopped
     networks:
       - liflow-network-microservice

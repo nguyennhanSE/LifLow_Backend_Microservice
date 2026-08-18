@@ -6,7 +6,9 @@ import {
   IsEnum,
   IsIn,
   IsInt,
+  IsMimeType,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   IsUUID,
@@ -225,4 +227,49 @@ export interface RecipeIdPayload {
 export interface UpdateRecipePayload {
   id: string;
   updateRecipeDto: UpdateRecipeDto;
+}
+
+export type SerializedBuffer =
+  | Buffer
+  | Uint8Array
+  | number[]
+  | {
+      type?: 'Buffer';
+      data?: number[];
+    };
+
+export class RecipeThumbnailFileMetadataDto {
+  @IsOptional()
+  @IsString()
+  originalname?: string;
+
+  @IsString()
+  @IsMimeType()
+  mimetype!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  size?: number;
+
+  @IsOptional()
+  buffer?: SerializedBuffer;
+
+  @IsOptional()
+  @IsString()
+  base64?: string;
+}
+
+export class PatchRecipeThumbnailDto {
+  @IsUUID('4')
+  recipeId!: string;
+
+  @IsObject()
+  fileMetadata!: RecipeThumbnailFileMetadataDto;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  replace?: boolean;
 }

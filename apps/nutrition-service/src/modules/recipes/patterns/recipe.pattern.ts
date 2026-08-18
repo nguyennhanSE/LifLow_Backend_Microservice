@@ -4,4 +4,7 @@ export const RECIPE_PATTERNS = {
   getRecipeById: 'recipe.get-by-id',
   updateRecipe: 'recipe.update',
   deleteRecipe: 'recipe.delete',
+
+  //
+  patchRecipeThumbnail: 'recipe.patch-thumbnail',
 } as const;

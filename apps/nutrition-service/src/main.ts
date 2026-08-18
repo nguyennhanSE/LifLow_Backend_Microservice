@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -8,7 +8,13 @@ import { NutritionServiceModule } from './nutrition-service.module';
 async function bootstrap() {
   const app = await NestFactory.create(NutritionServiceModule);
   const configService = app.get(AppConfigService);
-
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   configureSwagger(app);
 
   app.connectMicroservice<MicroserviceOptions>({

@@ -22,6 +22,13 @@ model Recipe {
   views         Int              @default(0)
   status        String           @default("pending") // e.g., pending | approved | rejected
   thumbnailUrl  String[]         @map("thumbnail_url")
+
+  // version field for optimistic concurrency control
+  version       Int              @default(1) @map("version") @db.Integer
+  // video
+  videoAssetId  String?        @map("video_asset_id")
+  videoAsset    VideoAsset?    @relation(fields: [videoAssetId], references: [id])
+  
   content       String
   ingredients   String[]         @map("ingredients")
   // extension
@@ -132,4 +139,157 @@ model RequestLog {
   @@index([traceId, occurredAt])
   @@index([correlationId, occurredAt])
   @@map("request_logs")
+}
+
+enum VideoUploadStatus {
+  CREATED
+  UPLOADING
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  CANCELLED
+}
+
+enum VideoUploadPartStatus {
+  PENDING
+  UPLOADING
+  UPLOADED
+  FAILED
+}
+
+enum VideoRenditionStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+
+model VideoUploadSession {
+  id             String            @id @default(uuid())
+  videoAssetId   String            @map("video_asset_id")
+  videoAsset     VideoAsset        @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+
+  bucket         String
+  key            String
+
+  //S3 Multipart Upload 
+  multipartUploadId String?        @map("multipart_upload_id")
+
+  status         VideoUploadStatus @default(CREATED)
+  totalParts     Int?              @map("total_parts")
+  partSizeBytes  Int?              @map("part_size_bytes")
+  expiresAt      DateTime?         @map("expires_at")
+  completedAt    DateTime?         @map("completed_at")
+
+  parts          VideoUploadPart[]
+
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  @@index([videoAssetId])
+  @@index([status])
+  @@unique([bucket, key])
+  @@map("video_upload_sessions")
+}
+
+model VideoUploadPart {
+  id                   String            @id @default(uuid())
+  videoUploadSessionId String            @map("video_upload_session_id")
+
+  partNumber           Int               @map("part_number")
+  etag                 String?           @map("etag")
+  sizeBytes            Int?              @map("size_bytes")
+  status               VideoUploadPartStatus @default(PENDING)
+  uploadedAt           DateTime?         @map("uploaded_at")
+
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  videoUploadSession   VideoUploadSession @relation(fields: [videoUploadSessionId], references: [id], onDelete: Cascade)
+
+  @@index([videoUploadSessionId])
+  @@index([status])
+  @@unique([videoUploadSessionId, partNumber])
+  @@map("video_upload_parts")
+}
+
+
+model VideoAsset {
+  id              String            @id @default(uuid())
+  ownerId         String?           @map("owner_id")
+
+  status          VideoUploadStatus @default(CREATED)
+
+  sourceObjectId  String?           @map("source_object_id")
+  sourceObject    AwsS3Object?      @relation("VideoSourceObject", fields: [sourceObjectId], references: [id])
+
+  hlsMasterObjectId String?         @map("hls_master_object_id")
+  hlsMasterObject   AwsS3Object?    @relation("VideoHlsMasterObject", fields: [hlsMasterObjectId], references: [id])
+
+  playbackUrl     String?           @map("playback_url")
+  durationMs      Int?              @map("duration_ms")
+  width           Int?
+  height          Int?
+  sizeBytes       BigInt?           @map("size_bytes")
+  mimeType        String?           @map("mime_type")
+
+  errorMessage    String?           @map("error_message")
+  metadata        Json?
+
+  recipes         Recipe[]
+  uploadSessions  VideoUploadSession[]
+  renditions      VideoRendition[]
+
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("video_assets")
+}
+
+model VideoRendition {
+  id             String                @id @default(uuid())
+  videoAssetId   String                @map("video_asset_id")
+  videoAsset     VideoAsset            @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+
+  status         VideoRenditionStatus  @default(PENDING)
+  objectId       String?               @map("object_id")
+  object         AwsS3Object?          @relation(fields: [objectId], references: [id])
+
+  bitrateKbps    Int                   @map("bitrate_kbps")
+  width          Int
+  height         Int
+  playlistUrl    String?               @map("playlist_url")
+  segmentPrefix  String?               @map("segment_prefix")
+
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  @@unique([videoAssetId, bitrateKbps])
+  @@index([videoAssetId])
+  @@map("video_renditions")
+}
+model AwsS3Object {
+  id          String   @id @default(uuid())
+  bucket      String
+  key         String
+  url         String
+  contentType String?  @map("content_type")
+  sizeBytes   BigInt?  @map("size_bytes")
+  etag        String?
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  videoSources VideoAsset[] @relation("VideoSourceObject")
+  hlsMasters   VideoAsset[] @relation("VideoHlsMasterObject")
+  renditions   VideoRendition[]
+
+  @@unique([bucket, key])
+  @@index([bucket])
+  @@index([key])
+  @@map("aws_s3_objects")
 }
