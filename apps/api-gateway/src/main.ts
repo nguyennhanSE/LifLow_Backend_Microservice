@@ -30,7 +30,7 @@ const SWAGGER_PATH = 'docs';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
-    app.useGlobalPipes(
+  app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,

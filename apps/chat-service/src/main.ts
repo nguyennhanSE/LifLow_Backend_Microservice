@@ -1,8 +1,12 @@
 import { NestFactory } from '@nestjs/core';
+import { AppConfigService } from 'libs/config';
 import { ChatServiceModule } from './chat-service.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(ChatServiceModule);
-  await app.listen(process.env.port ?? 3000);
+  const configService = app.get(AppConfigService);
+
+  await app.listen(configService.get<number>('chatService.port', 3504));
 }
-bootstrap();
+
+void bootstrap();

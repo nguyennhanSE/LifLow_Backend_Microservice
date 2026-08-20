@@ -143,6 +143,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  chat-postgres:
+    image: postgres:17-alpine
+    container_name: chat-postgres-microservice
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: ${CHAT_SERVICE_DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${CHAT_SERVICE_DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${CHAT_SERVICE_DATABASE_NAME:-postgres}
+    volumes:
+      - chat_postgres_data_microservice:/var/lib/postgresql/data
+    ports:
+      - "${CHAT_SERVICE_DATABASE_PORT:-5437}:5432"
+    networks:
+      - liflow-network-microservice
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
       
   
   redis: 
@@ -395,3 +420,4 @@ volumes:
   kibana_data_microservice:
   loki_data_microservice:
   rabbitmq_data_microservice:
+  chat_postgres_data_microservice:
