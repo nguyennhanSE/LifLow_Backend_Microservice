@@ -168,6 +168,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  notification-postgres:
+    image: postgres:17-alpine
+    container_name: notification-postgres-microservice
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: ${NOTIFICATION_SERVICE_DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${NOTIFICATION_SERVICE_DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${NOTIFICATION_SERVICE_DATABASE_NAME:-postgres}
+    volumes:
+      - notification_postgres_data_microservice:/var/lib/postgresql/data
+    ports:
+      - "${NOTIFICATION_SERVICE_DATABASE_PORT:-5438}:5432"
+    networks:
+      - liflow-network-microservice
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
       
   
   redis: 
@@ -421,3 +446,4 @@ volumes:
   loki_data_microservice:
   rabbitmq_data_microservice:
   chat_postgres_data_microservice:
+  notification_postgres_data_microservice:

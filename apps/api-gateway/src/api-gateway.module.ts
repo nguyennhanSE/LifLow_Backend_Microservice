@@ -12,7 +12,10 @@ import { RoleController } from './routes/roles/role.controller';
 import { RoleGuard } from './guards/role.guard';
 import { MembershipController } from './routes/memberships/membership.controller';
 import { UserController } from './routes/users/user.controller';
+import { NotificationController } from './routes/notification/notification.controller';
+import { NotificationGateway } from './routes/notification/gateway/notification.gateway';
 import { RequestInterceptor } from './interceptors/request.interceptor';
+import { MessagingModule } from './libs/messaging/messaging.module';
 import { TraceModule } from './traces/trace.module';
 
 @Module({
@@ -22,14 +25,17 @@ import { TraceModule } from './traces/trace.module';
     ClientsModule,
     GuardModule,
     TraceModule,
+    MessagingModule,
   ],
   controllers: [
     AuthController,
     RoleController,
     MembershipController,
     UserController,
+    NotificationController,
   ],
   providers: [
+    NotificationGateway,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

@@ -27,3 +27,4 @@ model Trace {
   status    TraceStatus @default(PENDING) @map("status")
 
 }
+

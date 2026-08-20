@@ -1,6 +1,7 @@
-export interface RequestMetadata {
+export interface NotificationRequestMetadata {
   // Trace / Request Identifiers
   traceId?: string | null;
+  requestId?: string | null;
   parentRequestId?: string | null;
   correlationId?: string | null;
   causationId?: string | null;
@@ -20,10 +21,11 @@ export interface RequestMetadata {
 
   // Gateway request context
   requestIp?: string | null;
+  ip?: string | null;
+  userAgent?: string | null;
 }
 
-export type IdentityRequestMetadata = RequestMetadata;
-
-export type LoyaltyRequestMetadata = RequestMetadata;
-
-export type NotificationRequestMetadata = RequestMetadata;
+export interface NotificationRequestPayload<TData> {
+  data: TData;
+  metadata?: NotificationRequestMetadata;
+}

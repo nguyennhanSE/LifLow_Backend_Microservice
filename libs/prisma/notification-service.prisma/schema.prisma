@@ -1,0 +1,82 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/notification-service"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RequestStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model RequestLog {
+  id       String @id @default(uuid())
+  sequence Int    @unique @default(autoincrement())
+
+  // Trace / message context
+  traceId         String?        @map("trace_id")
+  requestId       String?        @unique @map("request_id")
+  parentRequestId String?        @map("parent_request_id")
+  correlationId   String?        @map("correlation_id")
+  causationId     String?        @map("causation_id")
+  requestPattern  String?        @map("request_pattern")
+  requestStatus   RequestStatus? @default(PENDING) @map("request_status")
+
+  // Service / source context
+  serviceName     String? @map("service_name")
+  serviceIp       String? @map("service_ip")
+  serviceMetadata Json?   @map("service_metadata")
+
+  // Actor
+  userId      String? @map("user_id")
+  anonymousId String? @map("anonymous_id")
+  sessionId   String? @map("session_id")
+  actorType   String? @map("actor_type") // user, admin, system, service
+
+  // Entity
+  entityType String? @map("entity_type")
+  entityId   String? @map("entity_id")
+
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  lokiPushedAt   DateTime? @map("loki_pushed_at")
+  lokiPushError  String?   @map("loki_push_error")
+  lokiRetryCount Int       @default(0) @map("loki_retry_count")
+
+  @@index([userId, occurredAt])
+  @@index([traceId, occurredAt])
+  @@index([correlationId, occurredAt])
+  @@map("request_logs")
+}
+
+enum EventType {
+  ORDER_STATUS
+  COUPON
+  PROMOTION
+  RECIPE
+  GENERAL
+}
+
+model EventNotification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  title     String           @map("title")
+  body      String           @map("body")
+  type      EventType        @default(GENERAL) @map("type")
+  data      Json?            @map("data") // Custom payload: { orderGroupNumber?, productId?, deepLink?, etc. }
+  isRead    Boolean          @default(false) @map("is_read")
+  sentAt    DateTime?        @map("sent_at") // When FCM was actually sent
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([userId, type])
+  @@map("event_notifications")
+}
