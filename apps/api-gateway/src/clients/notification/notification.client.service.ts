@@ -9,7 +9,7 @@ import {
   CreateNotificationDto,
   QueryNotificationDto,
 } from '../../routes/notification/dtos/notification.dto';
-import { NotificationRequestMetadata } from '../metadata/client.metadata';
+import { NotificationRequestMetadata } from '../../metadata/client.metadata';
 import { NOTIFICATION_PATTERNS } from './notification.pattern';
 
 export interface NotificationRequestPayload<TData> {

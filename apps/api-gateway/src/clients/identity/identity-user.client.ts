@@ -12,7 +12,7 @@ import {
   UpdateUserDto,
   UpdateUserProfileDto,
 } from '../../routes/users/dtos/user.dto';
-import { IdentityRequestMetadata } from '../metadata/client.metadata';
+import { IdentityRequestMetadata } from '../../metadata/client.metadata';
 import { IDENTITY_USER_PATTERNS } from './identity.pattern';
 import { IdentityClientService } from './identity.client.service';
 

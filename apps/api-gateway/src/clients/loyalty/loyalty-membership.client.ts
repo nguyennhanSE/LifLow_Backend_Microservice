@@ -9,7 +9,7 @@ import {
   UpdateMembershipDto,
   UpdateUserMembershipDto,
 } from '../../routes/memberships/dtos/membership.dto';
-import { LoyaltyRequestMetadata } from '../metadata/client.metadata';
+import { LoyaltyRequestMetadata } from '../../metadata/client.metadata';
 import { LOYALTY_MEMBERSHIP_PATTERNS } from './loyalty.pattern';
 import { LoyaltyClientService } from './loyalty.client.service';
 

@@ -6,7 +6,7 @@ import {
   QueryMessagesDto,
   UpdateMessageDto,
 } from '../../routes/messaging/dtos/messaging.dto';
-import { ChatRequestMetadata } from '../metadata/client.metadata';
+import { ChatRequestMetadata } from '../../metadata/client.metadata';
 import { ChatClientService } from './chat.client.service';
 import { CHAT_MESSAGE_PATTERNS, CHAT_ROOM_PATTERNS } from './chat.pattern';
 

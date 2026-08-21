@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { catchError, finalize, Observable, throwError } from 'rxjs';
-import type { RequestMetadata } from '../clients/metadata/client.metadata';
+import type { RequestMetadata } from '../metadata/client.metadata';
 import { TraceStatus } from '../traces/enums/trace-status.enum';
 import { TraceService } from '../traces/trace.service';
 

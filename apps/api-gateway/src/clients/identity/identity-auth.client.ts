@@ -4,7 +4,7 @@ import {
   LogoutDto,
   RefreshTokenRequestDto,
 } from '../../routes/auth/dtos/auth.dto';
-import { IdentityRequestMetadata } from '../metadata/client.metadata';
+import { IdentityRequestMetadata } from '../../metadata/client.metadata';
 import { IDENTITY_AUTH_PATTERNS } from './identity.pattern';
 import { IdentityClientService } from './identity.client.service';
 

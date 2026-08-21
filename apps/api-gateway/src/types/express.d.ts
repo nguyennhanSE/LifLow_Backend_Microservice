@@ -1,4 +1,4 @@
-import type { RequestMetadata } from '../clients/metadata/client.metadata';
+import type { RequestMetadata } from '../metadata/client.metadata';
 
 declare global {
   namespace Express {

@@ -4,7 +4,7 @@ import {
   RoleQueryDto,
   UpdateRoleDto,
 } from '../../routes/roles/dtos/role.dto';
-import { IdentityRequestMetadata } from '../metadata/client.metadata';
+import { IdentityRequestMetadata } from '../../metadata/client.metadata';
 import { IDENTITY_ROLE_PATTERNS } from './identity.pattern';
 import { IdentityClientService } from './identity.client.service';
 

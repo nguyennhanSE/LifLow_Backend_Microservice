@@ -6,7 +6,7 @@ import { AppConfigService } from 'libs/config/config.service';
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { timeout } from 'rxjs/internal/operators/timeout';
 
-import { LoyaltyRequestMetadata } from '../metadata/client.metadata';
+import { LoyaltyRequestMetadata } from '../../metadata/client.metadata';
 
 export interface LoyaltyRequestPayload<TData> {
   data: TData;

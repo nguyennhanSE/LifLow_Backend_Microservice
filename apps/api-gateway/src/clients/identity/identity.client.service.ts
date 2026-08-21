@@ -5,7 +5,7 @@ import { firstValueFrom } from "rxjs/internal/firstValueFrom";
 import { timeout } from "rxjs/internal/operators/timeout";
 import { Transport } from "@nestjs/microservices/enums/transport.enum";
 import { ClientProxyFactory } from "@nestjs/microservices/client/client-proxy-factory";
-import { IdentityRequestMetadata } from "../metadata/client.metadata";
+import { IdentityRequestMetadata } from "../../metadata/client.metadata";
 
 export interface IdentityRequestPayload<TData> {
   data: TData;

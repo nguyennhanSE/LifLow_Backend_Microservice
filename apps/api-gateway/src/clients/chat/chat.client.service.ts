@@ -5,7 +5,7 @@ import { Transport } from '@nestjs/microservices/enums/transport.enum';
 import { AppConfigService } from 'libs/config/config.service';
 import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
 import { timeout } from 'rxjs/internal/operators/timeout';
-import { ChatRequestMetadata } from '../metadata/client.metadata';
+import { ChatRequestMetadata } from '../../metadata/client.metadata';
 
 export interface ChatRequestPayload<TData> {
   data: TData;
