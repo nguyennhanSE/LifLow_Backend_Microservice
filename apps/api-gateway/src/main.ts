@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import { AppConfigService } from 'libs/config';
+import { createGrpcMicroserviceOptions } from 'libs/grpc';
 import { ApiGatewayModule } from './api-gateway.module';
 
 interface CorsConfig {
@@ -43,6 +44,17 @@ async function bootstrap() {
   configureSecurityHeaders(app, configService);
   configureRateLimit(app, configService);
   configureSwagger(app);
+
+  app.connectMicroservice(
+    createGrpcMicroserviceOptions(
+      'api_gateway',
+      'api-gateway.proto',
+      configService.get<number>('apiGateway.grpc.port', 50051),
+    ),
+    { inheritAppConfig: true },
+  );
+
+  await app.startAllMicroservices();
 
   const port = configService.get<number>('apiGateway.port', 3500);
   await app.listen(port);

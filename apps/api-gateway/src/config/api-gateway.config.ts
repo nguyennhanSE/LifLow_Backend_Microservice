@@ -32,6 +32,9 @@ const toStringList = (
 
 export const apiGatewayConfig = registerAs('apiGateway', () => ({
   port: toNumber(process.env.API_GATEWAY_PORT ?? process.env.APP_PORT, 3500),
+  grpc: {
+    port: toNumber(process.env.API_GATEWAY_GRPC_PORT, 50051),
+  },
   database: {
     url: process.env.API_GATEWAY_DATABASE_URL ?? '',
     host: process.env.API_GATEWAY_DATABASE_HOST ?? '',

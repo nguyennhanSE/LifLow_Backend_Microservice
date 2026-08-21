@@ -5,9 +5,11 @@ import { AppConfigModule } from 'libs/config';
 import { AppQueueModule } from 'libs/queue';
 import { RedisCacheModule, RedisMessagingModule } from 'libs/redis';
 import { chatServiceConfig } from './config/chat-service.config';
-import { RequestInterceptor } from './interceptors/request.interceptor';
+import { ChatHealthGrpcController } from './grpc/health/health.grpc.controller';
 import { ChatServiceController } from './chat-service.controller';
 import { ChatServiceService } from './chat-service.service';
+import { RequestInterceptor } from './interceptors/request.interceptor';
+import { MessagingModule } from './modules/messaging/messaging.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ChatQueueModule } from './queue/chat-queue.module';
 
@@ -18,10 +20,11 @@ import { ChatQueueModule } from './queue/chat-queue.module';
     AppQueueModule.forRoot(),
     PrismaModule,
     ChatQueueModule,
+    MessagingModule,
     RedisCacheModule,
     RedisMessagingModule,
   ],
-  controllers: [ChatServiceController],
+  controllers: [ChatServiceController, ChatHealthGrpcController],
   providers: [
     ChatServiceService,
     {

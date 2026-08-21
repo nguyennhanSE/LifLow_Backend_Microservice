@@ -27,3 +27,5 @@ export type IdentityRequestMetadata = RequestMetadata;
 export type LoyaltyRequestMetadata = RequestMetadata;
 
 export type NotificationRequestMetadata = RequestMetadata;
+
+export type ChatRequestMetadata = RequestMetadata;

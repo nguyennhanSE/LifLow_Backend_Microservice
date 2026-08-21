@@ -14,9 +14,11 @@ import { MembershipController } from './routes/memberships/membership.controller
 import { UserController } from './routes/users/user.controller';
 import { NotificationController } from './routes/notification/notification.controller';
 import { NotificationGateway } from './routes/notification/gateway/notification.gateway';
+import { MessagingController } from './routes/messaging/messaging.controller';
 import { RequestInterceptor } from './interceptors/request.interceptor';
 import { MessagingModule } from './libs/messaging/messaging.module';
 import { TraceModule } from './traces/trace.module';
+import { ApiGatewayGrpcController } from './grpc/api-gateway-grpc.controller';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { TraceModule } from './traces/trace.module';
     MembershipController,
     UserController,
     NotificationController,
+    MessagingController,
+    ApiGatewayGrpcController,
   ],
   providers: [
     NotificationGateway,
