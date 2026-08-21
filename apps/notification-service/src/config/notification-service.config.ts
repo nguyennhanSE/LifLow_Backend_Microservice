@@ -9,6 +9,9 @@ export const notificationServiceConfig = registerAs(
   'notificationService',
   () => ({
     port: toNumber(process.env.NOTIFICATION_SERVICE_PORT, 3505),
+    grpc: {
+      port: toNumber(process.env.NOTIFICATION_SERVICE_GRPC_PORT, 50056),
+    },
     database: {
       url: process.env.NOTIFICATION_SERVICE_DATABASE_URL ?? '',
       host: process.env.NOTIFICATION_SERVICE_DATABASE_HOST ?? '',

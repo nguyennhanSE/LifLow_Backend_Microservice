@@ -7,6 +7,9 @@ const toNumber = (value: string | undefined, defaultValue: number): number => {
 
 export const nutritionServiceConfig = registerAs('nutritionService', () => ({
   port: toNumber(process.env.NUTRITION_SERVICE_PORT, 3503),
+  grpc: {
+    port: toNumber(process.env.NUTRITION_SERVICE_GRPC_PORT, 50054),
+  },
   database: {
     url: process.env.NUTRITION_DATABASE_URL ?? '',
     host: process.env.NUTRITION_DATABASE_HOST ?? '',

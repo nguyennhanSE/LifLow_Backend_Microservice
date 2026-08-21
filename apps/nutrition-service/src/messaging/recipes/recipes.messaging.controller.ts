@@ -11,12 +11,12 @@ import {
   QueryRecipeDto,
   RecipeIdPayload,
   UpdateRecipePayload,
-} from './dtos/recipe.dto';
-import { RECIPE_PATTERNS } from './patterns/recipe.pattern';
-import { RecipeService } from './recipe.service';
+} from '../../modules/recipes/dtos/recipe.dto';
+import { RecipeService } from '../../modules/recipes/recipe.service';
+import { RECIPE_PATTERNS } from './recipes.pattern';
 
 @Controller()
-export class RecipeController {
+export class RecipesMessagingController {
   constructor(private readonly recipeService: RecipeService) {}
 
   @MessagePattern(RECIPE_PATTERNS.createRecipe)

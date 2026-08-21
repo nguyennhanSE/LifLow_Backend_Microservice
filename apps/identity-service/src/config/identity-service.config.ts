@@ -7,23 +7,17 @@ const toNumber = (value: string | undefined, defaultValue: number): number => {
 
 export const identityServiceConfig = registerAs('identityService', () => ({
   port: toNumber(process.env.IDENTITY_SERVICE_PORT, 3501),
+  grpc: {
+    port: toNumber(process.env.IDENTITY_SERVICE_GRPC_PORT, 50052),
+  },
   database: {
-    url:
-      process.env.IDENTITY_SERVICE_DATABASE_URL ?? "",
-    host:
-      process.env.IDENTITY_SERVICE_DATABASE_HOST ?? "",
-    port: toNumber(
-      process.env.IDENTITY_SERVICE_DATABASE_PORT ?? '',
-      5432
-    ),
-    username:
-      process.env.IDENTITY_SERVICE_DATABASE_USERNAME ?? "",
-    password:
-      process.env.IDENTITY_SERVICE_DATABASE_PASSWORD ?? "",
-    name:
-      process.env.IDENTITY_SERVICE_DATABASE_NAME ?? 'postgres',
-    schema:
-      process.env.IDENTITY_SERVICE_DATABASE_SCHEMA ?? 'public',
+    url: process.env.IDENTITY_SERVICE_DATABASE_URL ?? '',
+    host: process.env.IDENTITY_SERVICE_DATABASE_HOST ?? '',
+    port: toNumber(process.env.IDENTITY_SERVICE_DATABASE_PORT ?? '', 5432),
+    username: process.env.IDENTITY_SERVICE_DATABASE_USERNAME ?? '',
+    password: process.env.IDENTITY_SERVICE_DATABASE_PASSWORD ?? '',
+    name: process.env.IDENTITY_SERVICE_DATABASE_NAME ?? 'postgres',
+    schema: process.env.IDENTITY_SERVICE_DATABASE_SCHEMA ?? 'public',
   },
   password: {
     hashSaltLength: toNumber(process.env.HASH_SALT_LENGTH, 10),

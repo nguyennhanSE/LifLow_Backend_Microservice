@@ -1,12 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import type { NutritionRequestPayload } from '../../common';
-import { RecipeLikeDto } from './dtos/recipe-like.dto';
-import { RECIPE_LIKE_PATTERNS } from './patterns/recipe-like.pattern';
-import { RecipeLikeService } from './recipe-like.service';
+import { RecipeLikeDto } from '../../modules/recipe-likes/dtos/recipe-like.dto';
+import { RecipeLikeService } from '../../modules/recipe-likes/recipe-like.service';
+import { RECIPE_LIKE_PATTERNS } from './recipe-likes.pattern';
 
 @Controller()
-export class RecipeLikeController {
+export class RecipeLikesMessagingController {
   constructor(private readonly recipeLikeService: RecipeLikeService) {}
 
   @MessagePattern(RECIPE_LIKE_PATTERNS.toggleRecipeLike)

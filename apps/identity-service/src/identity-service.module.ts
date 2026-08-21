@@ -7,6 +7,7 @@ import { identityServiceConfig } from './config/identity-service.config';
 import { IdentityServiceController } from './identity-service.controller';
 import { IdentityServiceService } from './identity-service.service';
 import { RequestInterceptor } from './interceptors/request.interceptor';
+import { IdentityHealthGrpcController } from './grpc/health/health.grpc.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -22,7 +23,7 @@ import { IdentityQueueModule } from './queue/identity-queue.module';
     AuthModule,
     RolesModule,
   ],
-  controllers: [IdentityServiceController],
+  controllers: [IdentityServiceController, IdentityHealthGrpcController],
   providers: [
     IdentityServiceService,
     {

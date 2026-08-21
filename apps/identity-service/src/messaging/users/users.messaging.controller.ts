@@ -22,14 +22,14 @@ import {
   UserIdPayload,
   UserIdsPayload,
   UserParamPayload,
-} from './dtos/user.dto';
-import { IDENTITY_USER_PATTERNS } from './patterns/user.pattern';
-import type { RecalculateUserMembershipLevelJobPayload } from './queue/user-queue.constant';
-import { UserQueueService } from './queue/user-queue.service';
-import { UsersService } from './users.service';
+} from '../../modules/users/dtos/user.dto';
+import type { RecalculateUserMembershipLevelJobPayload } from '../../modules/users/queue/user-queue.constant';
+import { UserQueueService } from '../../modules/users/queue/user-queue.service';
+import { UsersService } from '../../modules/users/users.service';
+import { IDENTITY_USER_PATTERNS } from './users.pattern';
 
 @Controller()
-export class UsersController {
+export class UsersMessagingController {
   constructor(
     private readonly usersService: UsersService,
     private readonly userQueueService: UserQueueService,
@@ -102,8 +102,13 @@ export class UsersController {
   }
 
   @MessagePattern(IDENTITY_USER_PATTERNS.deleteUser)
-  async deleteUser(@Payload() payload: IdentityRequestPayload<UserParamPayload>) {
-    const deletedUser = await this.usersService.remove(payload.data.id, payload.metadata);
+  async deleteUser(
+    @Payload() payload: IdentityRequestPayload<UserParamPayload>,
+  ) {
+    const deletedUser = await this.usersService.remove(
+      payload.data.id,
+      payload.metadata,
+    );
     return deletedUser;
   }
 

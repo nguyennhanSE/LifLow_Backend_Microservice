@@ -8,12 +8,12 @@ import {
   RoleIdPayload,
   RoleQueryDto,
   UpdateRolePayload,
-} from './dtos/role.dto';
-import { IDENTITY_ROLE_PATTERNS } from './patterns/role.pattern';
-import { RolesService } from './roles.service';
+} from '../../modules/roles/dtos/role.dto';
+import { RolesService } from '../../modules/roles/roles.service';
+import { IDENTITY_ROLE_PATTERNS } from './roles.pattern';
 
 @Controller()
-export class RolesController {
+export class RolesMessagingController {
   constructor(private readonly rolesService: RolesService) {}
 
   @MessagePattern(IDENTITY_ROLE_PATTERNS.createRole)

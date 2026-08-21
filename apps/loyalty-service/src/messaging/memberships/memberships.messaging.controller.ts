@@ -13,12 +13,12 @@ import {
   UpdateUserMembershipPayload,
   UserIdPayload,
   UserMembershipsPayload,
-} from './dtos/membership.dto';
-import { MEMBERSHIP_PATTERNS } from './patterns/membership.pattern';
-import { MembershipService } from './membership.service';
+} from '../../modules/memberships/dtos/membership.dto';
+import { MembershipService } from '../../modules/memberships/membership.service';
+import { MEMBERSHIP_PATTERNS } from './memberships.pattern';
 
 @Controller()
-export class MembershipController {
+export class MembershipsMessagingController {
   constructor(private readonly membershipService: MembershipService) {}
 
   @MessagePattern(MEMBERSHIP_PATTERNS.createMembership)

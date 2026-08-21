@@ -7,6 +7,9 @@ const toNumber = (value: string | undefined, defaultValue: number): number => {
 
 export const loyaltyServiceConfig = registerAs('loyaltyService', () => ({
   port: toNumber(process.env.LOYALTY_SERVICE_PORT, 3502),
+  grpc: {
+    port: toNumber(process.env.LOYALTY_SERVICE_GRPC_PORT, 50053),
+  },
   database: {
     url: process.env.LOYALTY_SERVICE_DATABASE_URL ?? '',
     host: process.env.LOYALTY_SERVICE_DATABASE_HOST ?? '',

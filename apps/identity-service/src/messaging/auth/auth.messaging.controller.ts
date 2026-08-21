@@ -5,14 +5,14 @@ import {
   LogoutDto,
   RefreshTokenRequestDto,
   ValidateTokenDto,
-} from './dtos/auth.dto';
+} from '../../modules/auth/dtos/auth.dto';
 
-import { IDENTITY_AUTH_PATTERNS } from './patterns/auth.pattern';
-import { AuthService } from './auth.service';
+import { AuthService } from '../../modules/auth/auth.service';
 import type { IdentityRequestPayload } from '../../common';
+import { IDENTITY_AUTH_PATTERNS } from './auth.pattern';
 
 @Controller()
-export class AuthController {
+export class AuthMessagingController {
   constructor(private readonly authService: AuthService) {}
 
   @MessagePattern(IDENTITY_AUTH_PATTERNS.login)

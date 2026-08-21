@@ -28,7 +28,7 @@ import {
   MembershipPriceSnapshot,
   MembershipRepository,
 } from './repositories/membership.repository';
-import { MEMBERSHIP_PATTERNS } from './patterns/membership.pattern';
+import { MEMBERSHIP_PATTERNS } from '../../messaging/memberships/memberships.pattern';
 
 const IDENTITY_USER_PATTERNS = {
   checkUserId: 'user.check-id',
