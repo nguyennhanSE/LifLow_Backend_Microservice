@@ -18,13 +18,21 @@ RUN apk add --no-cache \
   ca-certificates && \
   fc-cache -f -v
 
-# Generate Prisma client inside the container (linux-musl target)
-COPY prisma ./prisma
-RUN npx prisma generate
-
 # Copy source and build
 COPY . .
-RUN npm run build
+RUN PRISMA_SERVICE=api-gateway npx prisma generate && \
+    PRISMA_SERVICE=identity-service npx prisma generate && \
+    PRISMA_SERVICE=loyalty-service npx prisma generate && \
+    PRISMA_SERVICE=nutrition-service npx prisma generate && \
+    PRISMA_SERVICE=chat-service npx prisma generate && \
+    PRISMA_SERVICE=notification-service npx prisma generate
+
+RUN npx nest build api-gateway && \
+    npx nest build identity-service && \
+    npx nest build loyalty-service && \
+    npx nest build nutrition-service && \
+    npx nest build chat-service && \
+    npx nest build notification-service
 
 # Prune dev dependencies for runtime image
 RUN npm prune --production
@@ -58,11 +66,12 @@ RUN apk update && \
 COPY package*.json ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/prisma ./prisma
+COPY --from=builder /usr/src/app/libs/prisma ./libs/prisma
+COPY --from=builder /usr/src/app/proto ./proto
 COPY prisma.config.ts ./prisma.config.ts
 
 
-EXPOSE 3500
+EXPOSE 3500 3501 3502 3503 3504 3505 50051 50052 50053 50054 50055 50056
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
     PUPPETEER_SKIP_DOWNLOAD=true

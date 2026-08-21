@@ -1,43 +1,135 @@
+x-liflow-app: &liflow-app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: liflow-backend-image
+  pull_policy: never
+  env_file:
+    - .env.prod
+  restart: unless-stopped
+  networks:
+    - liflow-network-microservice
+
+x-liflow-shared-env: &liflow-shared-env
+  RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672
+  REDIS_HOST: redis
 
 services:
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   image: liflow-backend-image
-  #   pull_policy: never
-  #   env_file:
-  #     - .env.prod
-  #   environment:
-  #     # Use the postgres service on liflow-network
-  #     - DATABASE_HOST=postgres
-  #     - DATABASE_URL=postgresql://postgres:123456@postgres:5432/postgres?schema=public
-  #     # Override REDIS_HOST to use Docker service name
-  #     - REDIS_HOST=redis
-  #   ports:
-  #     - "3500:3500"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #   # healthcheck:
-  #   #   test:
-  #   #     [
-  #   #       'CMD-SHELL',
-  #   #       'node -e "require(''http'').get(''http://localhost:3500/api/v1/health/ready'', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on(''error'', () => process.exit(1))"',
-  #   #     ]
-  #   #   interval: 30s
-  #   #   timeout: 10s
-  #   #   retries: 3
-  #   #   start_period: 90s
-  #   restart: unless-stopped
-  #   networks:
-  #     - liflow-network
-  #   # volumes:
-  #   #   - .:/usr/src/app
-  #   #   - /usr/src/app/node_modules
-  #   # command: npm run start:dev
+  api-gateway:
+    <<: *liflow-app
+    container_name: api-gateway-microservice
+    environment:
+      <<: *liflow-shared-env
+      API_GATEWAY_DATABASE_HOST: api-gateway-postgres
+      API_GATEWAY_DATABASE_URL: postgresql://${API_GATEWAY_DATABASE_USERNAME:-postgres}:${API_GATEWAY_DATABASE_PASSWORD:-123456}@api-gateway-postgres:5432/${API_GATEWAY_DATABASE_NAME:-postgres}?schema=${API_GATEWAY_DATABASE_SCHEMA:-public}
+    ports:
+      - "${API_GATEWAY_PORT:-3500}:${API_GATEWAY_PORT:-3500}"
+      - "${API_GATEWAY_GRPC_PORT:-50051}:${API_GATEWAY_GRPC_PORT:-50051}"
+    depends_on:
+      api-gateway-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: node dist/apps/api-gateway/apps/api-gateway/src/main.js
+
+  identity-service:
+    <<: *liflow-app
+    container_name: identity-service-microservice
+    environment:
+      <<: *liflow-shared-env
+      IDENTITY_SERVICE_DATABASE_HOST: identity-postgres
+      IDENTITY_SERVICE_DATABASE_URL: postgresql://${IDENTITY_SERVICE_DATABASE_USERNAME:-postgres}:${IDENTITY_SERVICE_DATABASE_PASSWORD:-123456}@identity-postgres:5432/${IDENTITY_SERVICE_DATABASE_NAME:-postgres}?schema=${IDENTITY_SERVICE_DATABASE_SCHEMA:-public}
+    ports:
+      - "${IDENTITY_SERVICE_PORT:-3501}:${IDENTITY_SERVICE_PORT:-3501}"
+      - "${IDENTITY_SERVICE_GRPC_PORT:-50052}:${IDENTITY_SERVICE_GRPC_PORT:-50052}"
+    depends_on:
+      identity-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: node dist/apps/identity-service/apps/identity-service/src/main.js
+
+  loyalty-service:
+    <<: *liflow-app
+    container_name: loyalty-service-microservice
+    environment:
+      <<: *liflow-shared-env
+      LOYALTY_SERVICE_DATABASE_HOST: loyalty-postgres
+      LOYALTY_SERVICE_DATABASE_URL: postgresql://${LOYALTY_SERVICE_DATABASE_USERNAME:-postgres}:${LOYALTY_SERVICE_DATABASE_PASSWORD:-123456}@loyalty-postgres:5432/${LOYALTY_SERVICE_DATABASE_NAME:-postgres}?schema=${LOYALTY_SERVICE_DATABASE_SCHEMA:-public}
+    ports:
+      - "${LOYALTY_SERVICE_PORT:-3502}:${LOYALTY_SERVICE_PORT:-3502}"
+      - "${LOYALTY_SERVICE_GRPC_PORT:-50053}:${LOYALTY_SERVICE_GRPC_PORT:-50053}"
+    depends_on:
+      loyalty-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: node dist/apps/loyalty-service/apps/loyalty-service/src/main.js
+
+  nutrition-service:
+    <<: *liflow-app
+    container_name: nutrition-service-microservice
+    environment:
+      <<: *liflow-shared-env
+      NUTRITION_SERVICE_DATABASE_HOST: nutrition-postgres
+      NUTRITION_SERVICE_DATABASE_URL: postgresql://${NUTRITION_SERVICE_DATABASE_USERNAME:-postgres}:${NUTRITION_SERVICE_DATABASE_PASSWORD:-123456}@nutrition-postgres:5432/${NUTRITION_SERVICE_DATABASE_NAME:-postgres}?schema=${NUTRITION_SERVICE_DATABASE_SCHEMA:-public}
+      NUTRITION_DATABASE_HOST: nutrition-postgres
+      NUTRITION_DATABASE_URL: postgresql://${NUTRITION_SERVICE_DATABASE_USERNAME:-postgres}:${NUTRITION_SERVICE_DATABASE_PASSWORD:-123456}@nutrition-postgres:5432/${NUTRITION_SERVICE_DATABASE_NAME:-postgres}?schema=${NUTRITION_SERVICE_DATABASE_SCHEMA:-public}
+    ports:
+      - "${NUTRITION_SERVICE_PORT:-3503}:${NUTRITION_SERVICE_PORT:-3503}"
+      - "${NUTRITION_SERVICE_GRPC_PORT:-50054}:${NUTRITION_SERVICE_GRPC_PORT:-50054}"
+    depends_on:
+      nutrition-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: node dist/apps/nutrition-service/apps/nutrition-service/src/main.js
+
+  chat-service:
+    <<: *liflow-app
+    container_name: chat-service-microservice
+    environment:
+      <<: *liflow-shared-env
+      CHAT_SERVICE_DATABASE_HOST: chat-postgres
+      CHAT_SERVICE_DATABASE_URL: postgresql://${CHAT_SERVICE_DATABASE_USERNAME:-postgres}:${CHAT_SERVICE_DATABASE_PASSWORD:-123456}@chat-postgres:5432/${CHAT_SERVICE_DATABASE_NAME:-postgres}?schema=${CHAT_SERVICE_DATABASE_SCHEMA:-public}
+    ports:
+      - "${CHAT_SERVICE_PORT:-3504}:${CHAT_SERVICE_PORT:-3504}"
+      - "${CHAT_SERVICE_GRPC_PORT:-50055}:${CHAT_SERVICE_GRPC_PORT:-50055}"
+    depends_on:
+      chat-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: node dist/apps/chat-service/apps/chat-service/src/main.js
+
+  notification-service:
+    <<: *liflow-app
+    container_name: notification-service-microservice
+    environment:
+      <<: *liflow-shared-env
+      NOTIFICATION_SERVICE_DATABASE_HOST: notification-postgres
+      NOTIFICATION_SERVICE_DATABASE_URL: postgresql://${NOTIFICATION_SERVICE_DATABASE_USERNAME:-postgres}:${NOTIFICATION_SERVICE_DATABASE_PASSWORD:-123456}@notification-postgres:5432/${NOTIFICATION_SERVICE_DATABASE_NAME:-postgres}?schema=${NOTIFICATION_SERVICE_DATABASE_SCHEMA:-public}
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT:-3505}:${NOTIFICATION_SERVICE_PORT:-3505}"
+      - "${NOTIFICATION_SERVICE_GRPC_PORT:-50056}:${NOTIFICATION_SERVICE_GRPC_PORT:-50056}"
+    depends_on:
+      notification-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: node dist/apps/notification-service/apps/notification-service/src/main.js
 
   api-gateway-postgres:
     image: postgres:17-alpine
