@@ -3,25 +3,26 @@ import { join } from 'node:path';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppConfigModule, AppConfigService } from 'libs/config';
 import { apiGatewayConfig } from '../../config/api-gateway.config';
-import { ChatMessagingClient } from './chat-messaging.client';
-
-export const CHAT_MESSAGING_GRPC_CLIENT = 'CHAT_MESSAGING_GRPC_CLIENT';
+import { AuthGrpcController } from './auth.grpc.controller';
+import {
+  AuthGrpcService,
+  IDENTITY_AUTH_GRPC_CLIENT,
+} from './auth.grpc.service';
 
 @Module({
   imports: [
-    AppConfigModule.forFeature([apiGatewayConfig]),
     ClientsModule.registerAsync([
       {
-        name: CHAT_MESSAGING_GRPC_CLIENT,
+        name: IDENTITY_AUTH_GRPC_CLIENT,
         imports: [AppConfigModule.forFeature([apiGatewayConfig])],
         useFactory: (configService: AppConfigService) => ({
           transport: Transport.GRPC,
           options: {
-            package: 'chat',
-            protoPath: join(process.cwd(), 'proto', 'chat.proto'),
+            package: 'identity',
+            protoPath: join(process.cwd(), 'proto', 'identity.proto'),
             url: configService.get<string>(
-              'apiGateway.downstreams.chat.grpcUrl',
-              'localhost:50055',
+              'apiGateway.downstreams.identity.grpcUrl',
+              'localhost:50052',
             ),
           },
         }),
@@ -29,7 +30,8 @@ export const CHAT_MESSAGING_GRPC_CLIENT = 'CHAT_MESSAGING_GRPC_CLIENT';
       },
     ]),
   ],
-  providers: [ChatMessagingClient],
-  exports: [ChatMessagingClient],
+  controllers: [AuthGrpcController],
+  providers: [AuthGrpcService],
+  exports: [AuthGrpcService],
 })
-export class ChatClientModule {}
+export class AuthGrpcModule {}

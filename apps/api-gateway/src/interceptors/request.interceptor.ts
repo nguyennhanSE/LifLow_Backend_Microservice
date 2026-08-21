@@ -18,6 +18,10 @@ export class RequestInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<unknown>> {
+    if (context.getType<string>() !== 'http') {
+      return next.handle();
+    }
+
     const httpContext = context.switchToHttp();
     const request = httpContext.getRequest<Request>();
     const response = httpContext.getResponse<Response>();

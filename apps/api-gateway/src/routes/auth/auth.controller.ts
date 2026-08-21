@@ -4,19 +4,16 @@ import { ResponseModel } from 'libs/common/response';
 
 import { Public } from '../../guards/public.decorator';
 import { LoginDto, LogoutDto, RefreshTokenRequestDto } from './dtos/auth.dto';
-import { IdentityAuthClient } from '../../clients/identity/identity-auth.client';
+import { AuthGrpcService } from '../../grpc/auth/auth.grpc.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly identityAuthClient: IdentityAuthClient) {}
+  constructor(private readonly authGrpcService: AuthGrpcService) {}
 
   @Post('login')
   @Public()
   async login(@Body() loginDto: LoginDto, @Req() request: Request) {
-    const result = await this.identityAuthClient.login(
-      loginDto,
-      request.metadata,
-    );
+    const result = await this.authGrpcService.login(loginDto, request.metadata);
 
     return this.toResponseModel(result);
   }
@@ -24,7 +21,7 @@ export class AuthController {
   @Post('logout')
   @Public()
   async logout(@Body() logoutDto: LogoutDto, @Req() request: Request) {
-    const result = await this.identityAuthClient.logout(
+    const result = await this.authGrpcService.logout(
       logoutDto,
       request.metadata,
     );
@@ -38,7 +35,7 @@ export class AuthController {
     @Body() refreshTokenDto: RefreshTokenRequestDto,
     @Req() request: Request,
   ) {
-    const result = await this.identityAuthClient.refreshToken(
+    const result = await this.authGrpcService.refreshToken(
       refreshTokenDto,
       request.metadata,
     );

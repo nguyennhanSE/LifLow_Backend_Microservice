@@ -6,8 +6,106 @@ service ApiGatewayGrpcService {
   rpc Health (HealthRequest) returns (HealthResponse);
 }
 
+service ApiGatewayAuthGrpcService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Logout (LogoutRequest) returns (LogoutResponse);
+  rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc ValidateToken (ValidateTokenRequest) returns (TokenPayloadResponse);
+}
+
 message HealthRequest {}
 
 message HealthResponse {
   string status = 1;
+}
+
+message ApiGatewayRequestMetadata {
+  string trace_id = 1;
+  string request_id = 2;
+  string parent_request_id = 3;
+  string correlation_id = 4;
+  string causation_id = 5;
+  string request_pattern = 6;
+  string request_status = 7;
+  string service_name = 8;
+  string service_ip = 9;
+  string user_id = 10;
+  string anonymous_id = 11;
+  string session_id = 12;
+  string actor_type = 13;
+  string request_ip = 14;
+}
+
+message LoginData {
+  string username = 1;
+  string password = 2;
+  string ip = 3;
+  bool remember_me = 4;
+}
+
+message LoginRequest {
+  LoginData data = 1;
+  ApiGatewayRequestMetadata metadata = 2;
+}
+
+message LoginUser {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string account = 4;
+  repeated string roles = 5;
+}
+
+message LoginResponse {
+  LoginUser user = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message LogoutData {
+  string refresh_token = 1;
+}
+
+message LogoutRequest {
+  LogoutData data = 1;
+  ApiGatewayRequestMetadata metadata = 2;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message RefreshTokenData {
+  string refresh_token = 1;
+  string ip = 2;
+}
+
+message RefreshTokenRequest {
+  RefreshTokenData data = 1;
+  ApiGatewayRequestMetadata metadata = 2;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string new_refresh_token = 2;
+  string user_id = 3;
+}
+
+message ValidateTokenData {
+  string access_token = 1;
+}
+
+message ValidateTokenRequest {
+  ValidateTokenData data = 1;
+  ApiGatewayRequestMetadata metadata = 2;
+}
+
+message TokenPayloadResponse {
+  string sub = 1;
+  string email = 2;
+  string username = 3;
+  string token_type = 4;
+  repeated string roles = 5;
+  int64 iat = 6;
+  int64 exp = 7;
 }

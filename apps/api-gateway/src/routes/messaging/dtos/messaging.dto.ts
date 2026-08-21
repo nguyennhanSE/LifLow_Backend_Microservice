@@ -62,6 +62,22 @@ export class CreateMessageDto {
   content!: string;
 }
 
+export class JoinRoomDto {
+  @ApiProperty({ description: 'Room ID', format: 'uuid' })
+  @IsUUID()
+  roomId!: string;
+}
+
+export class TypingDto {
+  @ApiProperty({ description: 'Room ID', format: 'uuid' })
+  @IsUUID()
+  roomId!: string;
+
+  @ApiProperty({ description: 'Typing status' })
+  @IsBoolean()
+  isTyping!: boolean;
+}
+
 export class UpdateMessageDto {
   @ApiPropertyOptional({ description: 'Message content', maxLength: 2000 })
   @IsOptional()
@@ -105,4 +121,10 @@ export class QueryMessagesDto {
   @IsOptional()
   @IsString()
   after?: string;
+}
+
+export class QueryRoomMessagesSocketDto extends QueryMessagesDto {
+  @ApiProperty({ description: 'Room ID', format: 'uuid' })
+  @IsUUID()
+  roomId!: string;
 }

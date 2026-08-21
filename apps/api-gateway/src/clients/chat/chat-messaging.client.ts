@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import type { ClientGrpc } from '@nestjs/microservices';
+import { AppConfigService } from 'libs/config';
+import { firstValueFrom, Observable, timeout } from 'rxjs';
 import {
   CreateMessageDto,
   CreateRoomDto,
@@ -7,51 +10,117 @@ import {
   UpdateMessageDto,
 } from '../../routes/messaging/dtos/messaging.dto';
 import { ChatRequestMetadata } from '../../metadata/client.metadata';
-import { ChatClientService } from './chat.client.service';
-import { CHAT_MESSAGE_PATTERNS, CHAT_ROOM_PATTERNS } from './chat.pattern';
+import { CHAT_MESSAGING_GRPC_CLIENT } from './chat.client.module';
 
-interface CreateRoomPayload {
+interface ChatRequestPayload<TData> {
+  data: TData;
+  metadata?: ChatRequestMetadata;
+}
+
+interface CreateRoomData {
   userId: string;
-  createRoomDto: CreateRoomDto;
 }
 
-interface UserRoomsPayload {
-  userId: string;
-  query: GetRoomsQueryDto;
-}
-
-interface CreateMessagePayload {
-  senderId: string;
-  createMessageDto: CreateMessageDto;
-}
-
-interface RoomMessagesPayload {
+interface JoinRoomData {
   roomId: string;
   userId: string;
-  query: QueryMessagesDto;
 }
 
-interface MessageIdPayload {
+interface ListUserRoomsData extends GetRoomsQueryDto {
+  userId: string;
+}
+
+interface CreateMessageData {
+  roomId: string;
+  senderId: string;
+  content: string;
+}
+
+interface ListRoomMessagesData extends QueryMessagesDto {
+  roomId: string;
+  userId: string;
+}
+
+interface MessageIdData {
   messageId: string;
   userId: string;
 }
 
-interface UpdateMessagePayload extends MessageIdPayload {
-  updateMessageDto: UpdateMessageDto;
+interface UpdateMessageData extends MessageIdData {
+  content?: string;
+  isRead?: boolean;
+  hasContent: boolean;
+  hasIsRead: boolean;
+}
+
+interface ChatMessagingGrpcService {
+  createRoom(payload: ChatRequestPayload<CreateRoomData>): Observable<unknown>;
+  joinRoom(payload: ChatRequestPayload<JoinRoomData>): Observable<unknown>;
+  listUserRooms(
+    payload: ChatRequestPayload<ListUserRoomsData>,
+  ): Observable<unknown>;
+  createMessage(
+    payload: ChatRequestPayload<CreateMessageData>,
+  ): Observable<unknown>;
+  listRoomMessages(
+    payload: ChatRequestPayload<ListRoomMessagesData>,
+  ): Observable<unknown>;
+  getMessageById(
+    payload: ChatRequestPayload<MessageIdData>,
+  ): Observable<unknown>;
+  updateMessage(
+    payload: ChatRequestPayload<UpdateMessageData>,
+  ): Observable<unknown>;
+  markMessageRead(
+    payload: ChatRequestPayload<MessageIdData>,
+  ): Observable<unknown>;
+  deleteMessage(
+    payload: ChatRequestPayload<MessageIdData>,
+  ): Observable<unknown>;
 }
 
 @Injectable()
-export class ChatMessagingClient {
-  constructor(private readonly chatClientService: ChatClientService) {}
+export class ChatMessagingClient implements OnModuleInit {
+  private chatMessagingService!: ChatMessagingGrpcService;
+  private readonly timeoutMs: number;
+
+  constructor(
+    @Inject(CHAT_MESSAGING_GRPC_CLIENT)
+    private readonly chatMessagingGrpcClient: ClientGrpc,
+    private readonly configService: AppConfigService,
+  ) {
+    this.timeoutMs = this.configService.get<number>(
+      'apiGateway.downstreams.chat.timeoutMs',
+      5000,
+    );
+  }
+
+  onModuleInit() {
+    this.chatMessagingService =
+      this.chatMessagingGrpcClient.getService<ChatMessagingGrpcService>(
+        'ChatMessagingGrpcService',
+      );
+  }
 
   createRoom(
     userId: string,
-    createRoomDto: CreateRoomDto,
+    _createRoomDto: CreateRoomDto,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<CreateRoomPayload>(
-      CHAT_ROOM_PATTERNS.createRoom,
-      { data: { userId, createRoomDto }, metadata },
+    return this.send(
+      this.chatMessagingService.createRoom({
+        data: { userId },
+        metadata,
+      }),
+    );
+  }
+
+  joinRoom(roomId: string, userId: string, metadata?: ChatRequestMetadata) {
+    return this.send(
+      this.chatMessagingService.joinRoom({
+        data: { roomId, userId },
+        metadata,
+      }),
     );
   }
 
@@ -60,9 +129,11 @@ export class ChatMessagingClient {
     query: GetRoomsQueryDto,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<UserRoomsPayload>(
-      CHAT_ROOM_PATTERNS.listUserRooms,
-      { data: { userId, query }, metadata },
+    return this.send(
+      this.chatMessagingService.listUserRooms({
+        data: { userId, ...query },
+        metadata,
+      }),
     );
   }
 
@@ -71,9 +142,15 @@ export class ChatMessagingClient {
     createMessageDto: CreateMessageDto,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<CreateMessagePayload>(
-      CHAT_MESSAGE_PATTERNS.createMessage,
-      { data: { senderId, createMessageDto }, metadata },
+    return this.send(
+      this.chatMessagingService.createMessage({
+        data: {
+          roomId: createMessageDto.roomId,
+          senderId,
+          content: createMessageDto.content,
+        },
+        metadata,
+      }),
     );
   }
 
@@ -83,9 +160,11 @@ export class ChatMessagingClient {
     query: QueryMessagesDto,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<RoomMessagesPayload>(
-      CHAT_MESSAGE_PATTERNS.listRoomMessages,
-      { data: { roomId, userId, query }, metadata },
+    return this.send(
+      this.chatMessagingService.listRoomMessages({
+        data: { roomId, userId, ...query },
+        metadata,
+      }),
     );
   }
 
@@ -94,9 +173,11 @@ export class ChatMessagingClient {
     userId: string,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<MessageIdPayload>(
-      CHAT_MESSAGE_PATTERNS.getMessageById,
-      { data: { messageId, userId }, metadata },
+    return this.send(
+      this.chatMessagingService.getMessageById({
+        data: { messageId, userId },
+        metadata,
+      }),
     );
   }
 
@@ -106,9 +187,18 @@ export class ChatMessagingClient {
     updateMessageDto: UpdateMessageDto,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<UpdateMessagePayload>(
-      CHAT_MESSAGE_PATTERNS.updateMessage,
-      { data: { messageId, userId, updateMessageDto }, metadata },
+    return this.send(
+      this.chatMessagingService.updateMessage({
+        data: {
+          messageId,
+          userId,
+          content: updateMessageDto.content,
+          isRead: updateMessageDto.isRead,
+          hasContent: updateMessageDto.content !== undefined,
+          hasIsRead: updateMessageDto.isRead !== undefined,
+        },
+        metadata,
+      }),
     );
   }
 
@@ -117,9 +207,11 @@ export class ChatMessagingClient {
     userId: string,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<MessageIdPayload>(
-      CHAT_MESSAGE_PATTERNS.markMessageRead,
-      { data: { messageId, userId }, metadata },
+    return this.send(
+      this.chatMessagingService.markMessageRead({
+        data: { messageId, userId },
+        metadata,
+      }),
     );
   }
 
@@ -128,9 +220,15 @@ export class ChatMessagingClient {
     userId: string,
     metadata?: ChatRequestMetadata,
   ) {
-    return this.chatClientService.send<MessageIdPayload>(
-      CHAT_MESSAGE_PATTERNS.deleteMessage,
-      { data: { messageId, userId }, metadata },
+    return this.send(
+      this.chatMessagingService.deleteMessage({
+        data: { messageId, userId },
+        metadata,
+      }),
     );
+  }
+
+  private send(response$: Observable<unknown>) {
+    return firstValueFrom(response$.pipe(timeout(this.timeoutMs)));
   }
 }

@@ -4,6 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import { AppConfigService } from 'libs/config';
 import { createGrpcMicroserviceOptions } from 'libs/grpc';
+import { REDIS_CLIENT, type RedisClient } from 'libs/redis';
+import { RedisIoAdapter } from './adapters/redis-io.adapter';
 import { ApiGatewayModule } from './api-gateway.module';
 
 interface CorsConfig {
@@ -44,6 +46,7 @@ async function bootstrap() {
   configureSecurityHeaders(app, configService);
   configureRateLimit(app, configService);
   configureSwagger(app);
+  configureWebSocketAdapter(app);
 
   app.connectMicroservice(
     createGrpcMicroserviceOptions(
@@ -58,6 +61,14 @@ async function bootstrap() {
 
   const port = configService.get<number>('apiGateway.port', 3500);
   await app.listen(port);
+}
+
+function configureWebSocketAdapter(app: INestApplication) {
+  const redisClient = app.get<RedisClient>(REDIS_CLIENT);
+  const redisIoAdapter = new RedisIoAdapter(app, redisClient);
+
+  redisIoAdapter.connectToRedis();
+  app.useWebSocketAdapter(redisIoAdapter);
 }
 
 function configureSwagger(app: INestApplication) {

@@ -8,7 +8,10 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 
 import { IS_PUBLIC } from './public.decorator';
-import { IdentityAuthClient, TokenPayload } from '../clients/identity/identity-auth.client';
+import {
+  IdentityAuthClient,
+  TokenPayload,
+} from '../clients/identity/identity-auth.client';
 
 interface AuthenticatedRequest extends Request {
   user?: TokenPayload;
@@ -21,6 +24,10 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (context.getType<string>() !== 'http') {
+      return true;
+    }
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [
       context.getHandler(),
       context.getClass(),

@@ -35,6 +35,27 @@ export const apiGatewayConfig = registerAs('apiGateway', () => ({
   grpc: {
     port: toNumber(process.env.API_GATEWAY_GRPC_PORT, 50051),
   },
+  downstreams: {
+    identity: {
+      grpcUrl:
+        process.env.IDENTITY_SERVICE_GRPC_URL ??
+        `localhost:${process.env.IDENTITY_SERVICE_GRPC_PORT ?? '50052'}`,
+      timeoutMs: toNumber(
+        process.env.IDENTITY_SERVICE_GRPC_TIMEOUT_MS ??
+          process.env.RMQ_TIMEOUT_MS,
+        5000,
+      ),
+    },
+    chat: {
+      grpcUrl:
+        process.env.CHAT_SERVICE_GRPC_URL ??
+        `localhost:${process.env.CHAT_SERVICE_GRPC_PORT ?? '50055'}`,
+      timeoutMs: toNumber(
+        process.env.CHAT_SERVICE_GRPC_TIMEOUT_MS ?? process.env.RMQ_TIMEOUT_MS,
+        5000,
+      ),
+    },
+  },
   database: {
     url: process.env.API_GATEWAY_DATABASE_URL ?? '',
     host: process.env.API_GATEWAY_DATABASE_HOST ?? '',

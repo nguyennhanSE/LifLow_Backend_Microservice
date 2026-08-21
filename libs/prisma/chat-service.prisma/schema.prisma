@@ -74,7 +74,7 @@ model Room {
 
 model Message {
   id        String   @id @default(uuid())
-  roomId    String   @unique @map("room_id")
+  roomId    String   @map("room_id")
   senderId  String?  @map("sender_id")
   content   String   @map("content")
   isRead    Boolean  @default(false) @map("is_read")

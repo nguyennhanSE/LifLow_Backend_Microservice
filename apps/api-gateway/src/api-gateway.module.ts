@@ -15,10 +15,12 @@ import { UserController } from './routes/users/user.controller';
 import { NotificationController } from './routes/notification/notification.controller';
 import { NotificationGateway } from './routes/notification/gateway/notification.gateway';
 import { MessagingController } from './routes/messaging/messaging.controller';
+import { MessagingWebSocketGateway } from './routes/messaging/websocket-gateway/messaging.websocket-gateway';
 import { RequestInterceptor } from './interceptors/request.interceptor';
 import { MessagingModule } from './libs/messaging/messaging.module';
 import { TraceModule } from './traces/trace.module';
 import { ApiGatewayGrpcController } from './grpc/api-gateway-grpc.controller';
+import { AuthGrpcModule } from './grpc/auth/auth.grpc.module';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { ApiGatewayGrpcController } from './grpc/api-gateway-grpc.controller';
     GuardModule,
     TraceModule,
     MessagingModule,
+    AuthGrpcModule,
   ],
   controllers: [
     AuthController,
@@ -40,6 +43,7 @@ import { ApiGatewayGrpcController } from './grpc/api-gateway-grpc.controller';
   ],
   providers: [
     NotificationGateway,
+    MessagingWebSocketGateway,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
